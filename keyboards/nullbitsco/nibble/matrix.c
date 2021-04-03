@@ -18,8 +18,8 @@
 #define COL_SHIFTER ((uint32_t)1)
 
 // Column pins
-static const uint8_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
-static const uint8_t col_pins[MATRIX_MUX_COLS] = MATRIX_COL_MUX_PINS;
+static const uint32_t row_pins[MATRIX_ROWS] = MATRIX_ROW_PINS;
+static const uint32_t col_pins[MATRIX_MUX_COLS] = MATRIX_COL_MUX_PINS;
 
 // Internal functions
 

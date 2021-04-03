@@ -18,7 +18,6 @@
 #define ___ KC_NO
 
 #include "quantum.h"
-#include "remote_kb.h"
 
 #define LAYOUT_all( \
           K02, K03, K04, K05, K06, K07, K08, K09, K0A, K0B, K0C, K0D, K0E, K0F, K0G, \

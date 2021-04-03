@@ -87,8 +87,6 @@ void map_via_keycode(uint16_t * keycode) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   map_via_keycode(&keycode);
-  // Send keystrokes to host keyboard, if connected (see readme)
-  process_record_remote_kb(keycode, record);
   switch(keycode) {
     case PROG:
       if (record->event.pressed) {
@@ -158,13 +156,10 @@ void encoder_update_user(uint8_t index, bool clockwise) {
 }
 
 void matrix_init_user(void) {
-  // Initialize remote keyboard, if connected (see readme)
-  matrix_init_remote_kb();
+
 }
 
 void matrix_scan_user(void) {
-  // Scan and parse keystrokes from remote keyboard, if connected (see readme)
-  matrix_scan_remote_kb();
   if (is_alt_tab_active) {
     if (timer_elapsed(alt_tab_timer) > 1000) {
       unregister_code(KC_LALT);
