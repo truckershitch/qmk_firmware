@@ -19,7 +19,7 @@
 #include "animation_frames.h"
 
 enum layer_names {
-  _BASE,
+  _BASE, 
   _VIA1,
   _VIA2,
   _VIA3
@@ -149,7 +149,7 @@ static void render_anim(void) {
         } else {
             if (timer_elapsed32(anim_timer) > IDLE_FRAME_DURATION) {
                 anim_timer = timer_read32();
-                animation_phase();
+                animation_phase(); 
             }
         }
     }

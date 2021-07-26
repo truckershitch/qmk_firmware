@@ -23,6 +23,6 @@ CUSTOM_MATRIX = lite        # Lite custom matrix
 # Project specific files
 SRC += matrix.c \
        common/bitc_led.c \
-       big_led.c \
-       common/remote_kb.c
+       common/remote_kb.c \
+       big_led.c 
 QUANTUM_LIB_SRC += uart.c
