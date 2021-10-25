@@ -21,9 +21,9 @@ The "remote keyboard" forwards its keystrokes using UART serial over TRRS. Dynam
 detect allows the keyboard automatically switch to host or remote mode depending on
 which is connected to the USB port.
 
-Possible functionality includes the ability to send data from the host to the remote using
+Additional functionality includes the ability to send data from the host to the remote using
 a reverse link, allowing for LED sync, configuration, and more data sharing between devices.
-This will require a new communication protocol, as the current one is limited.
+This is implemented with the V2 protocol.
 */
 
 #include "remote_kb.h"
@@ -32,7 +32,6 @@ This will require a new communication protocol, as the current one is limited.
 // V2
 remote_kb_config rm_config;
 
-//TODO: static void pack_message_type_length(void); ???
 static uint8_t chksum8(const unsigned char *buf, size_t len);
 
 static void print_message_buffer_v2(uint8_t *msg_buffer, uint16_t len) {
@@ -51,76 +50,7 @@ static void print_message_buffer_v2(uint8_t *msg_buffer, uint16_t len) {
   PRINT("]\n");
 }
 
-// Unpack message from a remote_kb_message to a raw buffer
-//TODO: add bounds checking
-static bool unpack_remote_kb_message(remote_kb_message msg, uint8_t *msg_buffer, uint16_t max_len) {
-  // uint16_t fail_index = 0;
-  
-  // Set preamble
-  msg_buffer[IDX_MESSAGE_PREAMBLE] = RMKB_MSG_PREAMBLE;
-
-  // Set message type and length
-  uint8_t tmp = ((msg.message_type & 0xF) << 4) | (msg.message_length & 0xF);
-  DEBUG("type: %01X length: %01X\n", msg.message_type, msg.message_length);
-  DEBUG("MESSAGE_TYPE_LENGTH: %02X\n", tmp);
-  msg_buffer[IDX_MESSAGE_TYPE_LENGTH] = tmp; //todo: clean up?
-
-  // Copy payload from msg into message_buffer, starting at the right offset
-  memcpy(&msg_buffer[IDX_MESSAGE_PAYLOAD], msg.message_payload, msg.message_length);
-
-  // Set checksum
-  uint16_t IDX_MESSAGE_CHECKSUM = IDX_MESSAGE_PAYLOAD + msg.message_length;
-  // if (IDX_MESSAGE_CHECKSUM >= max_len) goto fail;
-
-  uint8_t checksum = chksum8(msg_buffer, IDX_MESSAGE_CHECKSUM);
-  DEBUG("IDX_MESSAGE_CHECKSUM: %d\n", IDX_MESSAGE_CHECKSUM);
-  DEBUG("checksum: %02X\n", checksum);
-  msg_buffer[IDX_MESSAGE_CHECKSUM] = checksum;
-
-  #if DLEVEL >= 2
-  print_message_buffer_v2(msg_buffer, max_len);
-  #endif
-  
-  return true;
-
-  // fail:
-  // dprintf("buffer error at index: %d!", )
-  // return false;
-}
-
-static remote_kb_message pack_remote_kb_message(uint8_t *msg_buffer) {
-  remote_kb_message msg;
-  msg.message_type = msg_buffer[IDX_MESSAGE_TYPE_LENGTH] >> 4;
-  msg.message_length = msg_buffer[IDX_MESSAGE_TYPE_LENGTH] & 0xF;
-  msg.message_payload = &msg_buffer[IDX_MESSAGE_PAYLOAD];
-
-  DEBUG("message_type: %01X message_length: %01X\n", msg.message_type, msg.message_length);
-
-  return msg;
-}
-
-// Send a packed message. Wrap this for each message type.
-static void send_msg_v2_core(remote_kb_message msg) {
-  // Determine size of message
-  uint16_t msg_buffer_size = MSG_LEN_REMOTE_KB_MSG + msg.message_length - 1;
-  DEBUG("msg_buffer_size: %d\n", msg_buffer_size);
-
-  uint8_t msg_buffer[msg_buffer_size];
-  if (unpack_remote_kb_message(msg, msg_buffer, msg_buffer_size)) {
-    DEBUG("uart_putchar:");
-    #if DLEVEL >= 2
-    for (int i=0; i<msg_buffer_size; i++) {
-      PRINT(" %02X", msg_buffer[i]);
-    }
-    PRINT("\n");
-    #endif
-    for (int i=0; i<msg_buffer_size; i++) {
-      uart_putchar(msg_buffer[i]);
-    }
-  }
-}
-
-static void handle_handshake(handshake_message hs_msg) {
+static void handle_handshake(handshake_data_t hs_msg) {
   DEBUG("hs_protocol_ver: %d hs_message_sender: %s\n", hs_msg.hs_protocol_ver, hs_msg.hs_message_sender ? "host" : "remote");
   if ((hs_msg.hs_protocol_ver == REMOTE_KB_PROTOCOL_VER) && (hs_msg.hs_message_sender != rm_config.host)) {
     INFO("Handshake accepted from %s\n", hs_msg.hs_message_sender ? "host" : "remote");
@@ -129,70 +59,88 @@ static void handle_handshake(handshake_message hs_msg) {
   }
 }
 
-//TODO: buffer bounds check?
-static void unpack_handshake_message(handshake_message hs_msg, uint8_t *hs_msg_buffer) {
-  DEBUG("hs_msg protocol_ver: %01X sender: %01X\n", hs_msg.hs_protocol_ver, hs_msg.hs_message_sender);
-  hs_msg_buffer[0] = (hs_msg.hs_protocol_ver & 0x7F) << 1;
-  hs_msg_buffer[0] |= (hs_msg.hs_message_sender & 0x01); 
-}
-
-static handshake_message pack_handshake_message(uint8_t *hs_msg_buffer) {
-  handshake_message hs_msg;
+static handshake_data_t pack_handshake_message(uint8_t *hs_msg_buffer) {
+  handshake_data_t hs_msg;
   hs_msg.hs_protocol_ver = (hs_msg_buffer[0] >> 1) & 0x7F;
   hs_msg.hs_message_sender = (hs_msg_buffer[0] & 0x01);
   DEBUG("hs_msg protocol_ver: %01X sender: %01X\n", hs_msg.hs_protocol_ver, hs_msg.hs_message_sender);
   return hs_msg;
 }
 
-// TODO: buffer bounds check?
-static void unpack_key_event_message(key_event_message key_msg, uint8_t *key_msg_buffer) {
-  DEBUG("key_msg keycode: %02X pressed: %02X\n", key_msg.keycode, key_msg.pressed);
-  key_msg_buffer[0] = (key_msg.keycode & 0xFF);
-  key_msg_buffer[1] = (key_msg.keycode >> 8) & 0xFF;
-  key_msg_buffer[2] = key_msg.pressed;
+static void send_key_event_message(key_event_message_t ke_msg) {
+  #define KE_MSG_SIZE 6
+
+  uint8_t ke_msg_buffer[KE_MSG_SIZE] = {0};
+  ke_msg_buffer[0] = RMKB_MSG_PREAMBLE;
+  ke_msg_buffer[1] = (ke_msg.header.message_type & 0xF) << 4;
+  ke_msg_buffer[1] |= (ke_msg.header.message_length & 0xF);
+  ke_msg_buffer[2] = (ke_msg.data.keycode & 0xFF);
+  ke_msg_buffer[3] = (ke_msg.data.keycode >> 8) & 0xFF;
+  ke_msg_buffer[4] = ke_msg.data.pressed;
+  ke_msg_buffer[5] = chksum8(ke_msg_buffer, KE_MSG_SIZE-1);
+
+  DEBUG("uart_putchar:");
+  #if DLEVEL >= 2
+  for (int i=0; i<KE_MSG_SIZE; i++) {
+    PRINT(" %02X", ke_msg_buffer[i]);
+  }
+  PRINT("\n");
+  #endif
+
+  for (int i=0; i<KE_MSG_SIZE; i++) {
+    uart_putchar(ke_msg_buffer[i]);
+  }
 }
 
-// static key_event_message pack_key_event_message(uint8_t *key_msg_buffer) {
-//   key_event_message key_msg;
-//   key_msg.keycode = key_msg_buffer[0] | (key_msg_buffer[1] << 8);
-//   key_msg.pressed = key_msg_buffer[2];
-//   DEBUG("key_msg keycode: %02X pressed: %02X\n", key_msg.keycode, key_msg.pressed);
-//   return key_msg;
-// }
+static void send_handshake_message(handshake_message_t hs_msg) {
+  #define HS_MSG_SIZE 4
 
-// TODO: convert payload to raw buffer? worth?
-// OR: could convert to pass pointer to struct, and then do the unpacking in
-// send_msg_v2_core based on message type
-static void send_handshake_core(bool sender) {
-  handshake_message hs_msg;
-  hs_msg.hs_protocol_ver = REMOTE_KB_PROTOCOL_VER;
-  hs_msg.hs_message_sender = sender;
+  uint8_t hs_msg_buffer[HS_MSG_SIZE] = {0};
+  hs_msg_buffer[0] = RMKB_MSG_PREAMBLE;
+  hs_msg_buffer[1] = (hs_msg.header.message_type & 0xF) << 4;
+  hs_msg_buffer[1] |= (hs_msg.header.message_length & 0xF);
+  hs_msg_buffer[2] = (hs_msg.data.hs_protocol_ver & 0x7F) << 1;
+  hs_msg_buffer[2] |= (hs_msg.data.hs_message_sender & 0x01);
+  hs_msg_buffer[3] = chksum8(hs_msg_buffer, HS_MSG_SIZE-1);
 
-  uint8_t hs_msg_buffer[MSG_LEN_HS] = {0};
-  unpack_handshake_message(hs_msg, hs_msg_buffer);
+  DEBUG("uart_putchar:");
+  #if DLEVEL >= 2
+  for (int i=0; i<HS_MSG_SIZE; i++) {
+    PRINT(" %02X", hs_msg_buffer[i]);
+  }
+  PRINT("\n");
+  #endif
 
-  remote_kb_message rmkb_msg;
-  rmkb_msg.message_type = MSG_HANDSHAKE;
-  rmkb_msg.message_length = MSG_LEN_HS;
-  rmkb_msg.message_payload = hs_msg_buffer;
-
-  send_msg_v2_core(rmkb_msg);
+  for (int i=0; i<HS_MSG_SIZE; i++) {
+    uart_putchar(hs_msg_buffer[i]);
+  }
 }
 
-static void send_keyevent_msg_v2(key_event_message ke_msg) {
-  uint8_t ke_msg_buffer[MSG_LEN_KEY_EVENT] = {0};
-  unpack_key_event_message(ke_msg, ke_msg_buffer);
+static void send_key_event(key_event_data_t ke_msg) {
+  key_event_message_t ke_msg_struct;
 
-  remote_kb_message rmkb_msg;
-  rmkb_msg.message_type = MSG_KEY_EVENT;
-  rmkb_msg.message_length = MSG_LEN_KEY_EVENT;
-  rmkb_msg.message_payload = ke_msg_buffer;
+  ke_msg_struct.header.message_type = MSG_KEY_EVENT;
+  ke_msg_struct.header.message_length = MSG_LEN_KEY_EVENT;
+  ke_msg_struct.data = ke_msg;
 
-  send_msg_v2_core(rmkb_msg);
+  send_key_event_message(ke_msg_struct);
+}
+
+
+static void temp_hs_test(void){
+  handshake_message_t hs_msg;
+
+  hs_msg.header.message_type = MSG_HANDSHAKE;
+  hs_msg.header.message_length = MSG_LEN_HS;
+  hs_msg.data.hs_protocol_ver = REMOTE_KB_PROTOCOL_VER;
+  hs_msg.data.hs_message_sender = rm_config.host;
+
+  send_handshake_message(hs_msg);
 }
 
 //TODO: rename raw msg to include buffer
 static void parse_message_v2(uint8_t *raw_msg) {
+  //TODO: pack to message_header_t struct? (cleaner way to do this?)
   uint8_t message_type = raw_msg[IDX_MESSAGE_TYPE_LENGTH] >> 4;
   uint8_t message_length = raw_msg[IDX_MESSAGE_TYPE_LENGTH] & 0xF;
   DEBUG("message_type: %01X message_length: %01X\n", message_type, message_length);
@@ -208,12 +156,14 @@ static void parse_message_v2(uint8_t *raw_msg) {
     return;
   }
 
-  remote_kb_message rmkb_msg = pack_remote_kb_message(raw_msg);
-
-  switch (rmkb_msg.message_type) {
+  switch (message_type) {
     case MSG_HANDSHAKE: {
       DEBUG("msg type: MSG_HANDSHAKE\n");
-      handshake_message hs_msg = pack_handshake_message(rmkb_msg.message_payload);
+      if (!rm_config.host) {
+        temp_hs_test();
+      }
+      //TODO: better to do in place?
+      handshake_data_t hs_msg = pack_handshake_message(&raw_msg[IDX_MESSAGE_PAYLOAD]);
       handle_handshake(hs_msg);
     } break;
     case MSG_KEY_EVENT:
@@ -246,7 +196,7 @@ static uint8_t chksum8(const unsigned char *buf, size_t len) {
 }
 
 // V1 send message function
-static void send_keyevent_msg_v1(key_event_message ke_msg) {
+static void send_keyevent_msg_v1(key_event_data_t ke_msg) {
   if (IS_HID_KC(ke_msg.keycode) || IS_RM_KC(ke_msg.keycode)) {
     uint8_t raw_msg[UART_MSG_LEN];
 
@@ -294,17 +244,13 @@ static void parse_message_v1(uint8_t *raw_msg) {
 }
 
 //TODO: buffer boudns checks!
-static void get_remote_kb_message(void) {
+static void get_message(void) {
   if (!uart_available()) return;
   
   uint16_t start_time = timer_read();
   uint8_t raw_msg[RMKB_MSG_BUFFSIZE] = {0};
   uint16_t timer_val[RMKB_MSG_BUFFSIZE] = {0};
   uint8_t raw_msg_idx = 0;
-
-  //TODO: remove timer code and iteration counting
-  static uint8_t iteration = 0;
-  DEBUG("i: %d start time: %u\n", iteration++, start_time);
 
   while (uart_available()) {
     raw_msg[raw_msg_idx] = uart_getchar();
@@ -337,14 +283,14 @@ static void get_remote_kb_message(void) {
 
 // TODO: pointless right now
 static void handle_incoming_messages(void) {
-  get_remote_kb_message();
+  get_message();
 }
 
-static void remote_kb_send_keycode(key_event_message ke_msg) {
+static void remote_kb_send_keycode(key_event_data_t ke_msg) {
   // Only send if not the host
   if (!rm_config.host) {
     if (rm_config.protocol_ver == 2 && rm_config.connected) {
-      send_keyevent_msg_v2(ke_msg);
+      send_key_event(ke_msg);
     } else {
       send_keyevent_msg_v1(ke_msg);
     }
@@ -370,10 +316,12 @@ static void print_status(void) {
   }
 }
 
+//TODO: do this every x seconds to re-establish connection
+//TODO: set connected=false first in case of disconnect? worth? idk
 static void remote_kb_send_handshake(void) {
   if (timer_elapsed(rm_config.handshake_timer) >= HANDSHAKE_TIMEOUT_MS) {
-    INFO("Sending RMKB HS\n");
-    send_handshake_core(rm_config.host);
+    INFO("Sending HS\n");
+    temp_hs_test();
     rm_config.handshake_timer = timer_read();
   }
   return;
@@ -389,7 +337,7 @@ void matrix_init_remote_kb(void) {
 
 // Send keystrokes from local to remote
 void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {
-  key_event_message ke_msg;
+  key_event_data_t ke_msg;
   ke_msg.keycode = keycode;
   ke_msg.pressed = record->event.pressed;
   remote_kb_send_keycode(ke_msg);
@@ -399,7 +347,8 @@ void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {
 void matrix_scan_remote_kb(void) {
   print_status(); //DEBUG
 
-  if (!rm_config.connected) {
+  // Only send handshakes if host
+  if (!rm_config.connected && rm_config.host) {
     remote_kb_send_handshake();
   }
 

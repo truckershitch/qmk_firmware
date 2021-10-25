@@ -28,6 +28,7 @@ enum remote_kb_message_type {
   NUM_MSGS, // Not a message
 };
 
+//TODO: needs updating with defines in functions
 // Message size in bytes
 enum remote_kb_message_size {
   MSG_LEN_HS = 1,
@@ -45,27 +46,36 @@ typedef struct remote_kb_config {
   uint16_t status_timer;      // Timer for printing status
 } remote_kb_config;
 
-typedef struct handshake_message {
-  uint8_t hs_protocol_ver : 7;    // Protocol version
-  uint8_t hs_message_sender : 1;  // Message sender (HOST or REMOTE)
-} handshake_message;
-
-typedef struct key_event_message {
-  uint16_t keycode;       // Keycode
-  uint8_t pressed;        // Pressed or not
-} key_event_message;
-
-typedef struct encoder_event_message {
-  uint16_t keycode;       // Keycode
-} encoder_event_message;
-
-typedef struct remote_kb_message {
-  uint8_t preamble;           // Magic number for sync TODO:remove?
+typedef struct message_header_t {
   uint8_t message_type : 4;   // remote_kb_message_type
   uint8_t message_length : 4; // Message payload length
-  uint8_t* message_payload;   // Pointer to payload buffer
-  uint8_t message_checksum;   // 8bit checksum TODO: remove?
-} remote_kb_message;
+} message_header_t;
+
+typedef struct handshake_data_t {
+  uint8_t hs_protocol_ver : 7;    // Protocol version
+  uint8_t hs_message_sender : 1;  // Message sender (HOST or REMOTE)
+} handshake_data_t;
+
+//TODO: rename things that use this to be more approp
+typedef struct key_event_data_t {
+  uint16_t keycode;       // Keycode
+  uint8_t pressed;        // Pressed or not
+} key_event_data_t;
+
+//TODO: use
+// typedef struct encoder_event_data_t {
+//   uint16_t keycode;       // Keycode
+// } encoder_event_data_t;
+
+typedef struct handshake_message_t {
+  message_header_t header;
+  handshake_data_t data;
+} handshake_message_t;
+
+typedef struct key_event_message_t {
+  message_header_t header;
+  key_event_data_t data;
+} key_event_message_t;
 
 enum remote_kb_message_idx {
   IDX_MESSAGE_PREAMBLE = 0,
@@ -121,7 +131,7 @@ enum remote_kb_message_idx {
 #define MSG_SENDER_REMOTE 0
 #define RMKB_MSG_PREAMBLE 0x68
 #define RMKB_MSG_BUFFSIZE 8
-#define HANDSHAKE_TIMEOUT_MS 5000
+#define HANDSHAKE_TIMEOUT_MS 10000
 #define STATUS_TIMEOUT_MS 5000
 
 // Protocol V1
