@@ -16,6 +16,7 @@
 #pragma once
 
 #include "quantum.h"
+#include "logging.h"
 #include <string.h>
 
 enum remote_kb_message_type {
@@ -30,6 +31,9 @@ enum remote_kb_message_type {
 
 //TODO: needs updating with defines in functions
 // Message size in bytes
+// TODO: this really isn't that useful, 
+// only for arbitraty length messages. but the size
+// of these are known.
 enum remote_kb_message_size {
   MSG_LEN_HS = 1,
   MSG_LEN_KEY_EVENT = 3,
@@ -56,7 +60,6 @@ typedef struct handshake_data_t {
   uint8_t hs_message_sender : 1;  // Message sender (HOST or REMOTE)
 } handshake_data_t;
 
-//TODO: rename things that use this to be more approp
 typedef struct key_event_data_t {
   uint16_t keycode;       // Keycode
   uint8_t pressed;        // Pressed or not
@@ -87,51 +90,13 @@ enum remote_kb_message_idx {
 #define REMOTE_KB_PROTOCOL_VER 2
 #define SERIAL_UART_BAUD 153600 // Low error rate for 32u4 @ 16MHz
 
-#define LERROR 0
-#define LINFO  1
-#define LDEBUG 2
-
-#define DLEVEL LDEBUG //0: Error, 1: Info, 2: Debug
-#define SERROR "ERROR"
-#define SINFO  "INFO "
-#define SDEBUG "DEBUG"
-
-#if defined (CONSOLE_ENABLE)
-  #define RMK_PRINTF(l, f_, ...) dprintf("%s %s: " f_, l, __func__, ##__VA_ARGS__)
-  #define ERR_PRINTF(l, f_, ...) dprintf("%s %s:%d: " f_, l, __func__, __LINE__, ##__VA_ARGS__)
-#endif 
-
-#if defined(CONSOLE_ENABLE)
-  #define PRINT(...) dprintf(__VA_ARGS__); 
-#else 
-  #define PRINT(...)
-#endif // ALL DLEVELS
-
-#if defined(CONSOLE_ENABLE) && DLEVEL >= 0
-  #define ERROR(...) ERR_PRINTF(SERROR, __VA_ARGS__); 
-#else 
-  #define ERROR(...)
-#endif // DLEVEL 0+
-
-#if defined(CONSOLE_ENABLE) && DLEVEL >= 1
-  #define INFO(...) RMK_PRINTF(SINFO, __VA_ARGS__); 
-#else 
-  #define INFO(...)
-#endif // DLEVEL 1+
-
-#if defined(CONSOLE_ENABLE) && DLEVEL >= 2
-  #define DEBUG(...) RMK_PRINTF(SDEBUG, __VA_ARGS__); 
-#else 
-  #define DEBUG(...)
-#endif // DLEVEL 2+
-
 // Protocol V2
 
 #define MSG_SENDER_HOST 1
 #define MSG_SENDER_REMOTE 0
 #define RMKB_MSG_PREAMBLE 0x68
 #define RMKB_MSG_BUFFSIZE 8
-#define HANDSHAKE_TIMEOUT_MS 10000
+#define HANDSHAKE_TIMEOUT_MS 5000
 #define STATUS_TIMEOUT_MS 5000
 
 // Protocol V1

@@ -50,24 +50,41 @@ static void print_message_buffer_v2(uint8_t *msg_buffer, uint16_t len) {
   PRINT("]\n");
 }
 
-static void handle_handshake(handshake_data_t hs_msg) {
-  DEBUG("hs_protocol_ver: %d hs_message_sender: %s\n", hs_msg.hs_protocol_ver, hs_msg.hs_message_sender ? "host" : "remote");
-  if ((hs_msg.hs_protocol_ver == REMOTE_KB_PROTOCOL_VER) && (hs_msg.hs_message_sender != rm_config.host)) {
-    INFO("Handshake accepted from %s\n", hs_msg.hs_message_sender ? "host" : "remote");
+static void handle_handshake(handshake_data_t hs_data) {
+  DEBUG("hs_protocol_ver: %d hs_message_sender: %s\n", hs_data.hs_protocol_ver, hs_data.hs_message_sender ? "host" : "remote");
+  if ((hs_data.hs_protocol_ver == REMOTE_KB_PROTOCOL_VER) && (hs_data.hs_message_sender != rm_config.host)) {
+    INFO("accepted from %s\n", hs_data.hs_message_sender ? "host" : "remote");
     rm_config.protocol_ver = REMOTE_KB_PROTOCOL_VER;
     rm_config.connected = true;
   }
 }
 
 static handshake_data_t pack_handshake_message(uint8_t *hs_msg_buffer) {
-  handshake_data_t hs_msg;
-  hs_msg.hs_protocol_ver = (hs_msg_buffer[0] >> 1) & 0x7F;
-  hs_msg.hs_message_sender = (hs_msg_buffer[0] & 0x01);
-  DEBUG("hs_msg protocol_ver: %01X sender: %01X\n", hs_msg.hs_protocol_ver, hs_msg.hs_message_sender);
-  return hs_msg;
+  handshake_data_t hs_data;
+  hs_data.hs_protocol_ver = (hs_msg_buffer[0] >> 1) & 0x7F;
+  hs_data.hs_message_sender = (hs_msg_buffer[0] & 0x01);
+  DEBUG("hs_data protocol_ver: %01X sender: %01X\n", hs_data.hs_protocol_ver, hs_data.hs_message_sender);
+  return hs_data;
 }
 
-static void send_key_event_message(key_event_message_t ke_msg) {
+static key_event_data_t pack_key_event_message(uint8_t *key_event_msg_buffer) {
+  key_event_data_t key_event_data;
+  
+  // ke_msg_buffer[0] = (ke_msg.data.keycode & 0xFF);
+  // ke_msg_buffer[1] = (ke_msg.data.keycode >> 8) & 0xFF;
+  // ke_msg_buffer[2] = ke_msg.data.pressed;
+
+  // uint16_t keycode = (uint16_t)raw_msg[IDX_KCLSB] | ((uint16_t)raw_msg[IDX_KCMSB] << 8);
+  // bool pressed = (bool)raw_msg[IDX_PRESSED];
+
+  key_event_data.keycode = (uint16_t)key_event_msg_buffer[0];
+  key_event_data.keycode |= ((uint16_t)key_event_msg_buffer[1] << 8);
+  key_event_data.pressed = key_event_msg_buffer[2];
+  DEBUG("key_event_data keycode: %04X pressed: %01X\n", key_event_data.keycode, key_event_data.pressed);
+  return key_event_data;
+}
+
+static void send_key_event_core(key_event_message_t ke_msg) {
   #define KE_MSG_SIZE 6
 
   uint8_t ke_msg_buffer[KE_MSG_SIZE] = {0};
@@ -92,7 +109,7 @@ static void send_key_event_message(key_event_message_t ke_msg) {
   }
 }
 
-static void send_handshake_message(handshake_message_t hs_msg) {
+static void send_handshake_core(handshake_message_t hs_msg) {
   #define HS_MSG_SIZE 4
 
   uint8_t hs_msg_buffer[HS_MSG_SIZE] = {0};
@@ -116,18 +133,21 @@ static void send_handshake_message(handshake_message_t hs_msg) {
   }
 }
 
-static void send_key_event(key_event_data_t ke_msg) {
-  key_event_message_t ke_msg_struct;
+// TODO: bounds checking, including SAFE_RANGE and 0x00-0xFF
+static void send_key_event(key_event_data_t ke_data) {
+  INFO("send_key_event kc: %04X, pressed: %u\n", ke_data.keycode, ke_data.pressed);
 
-  ke_msg_struct.header.message_type = MSG_KEY_EVENT;
-  ke_msg_struct.header.message_length = MSG_LEN_KEY_EVENT;
-  ke_msg_struct.data = ke_msg;
+  key_event_message_t ke_msg;
 
-  send_key_event_message(ke_msg_struct);
+  ke_msg.header.message_type = MSG_KEY_EVENT;
+  ke_msg.header.message_length = MSG_LEN_KEY_EVENT;
+  ke_msg.data = ke_data;
+
+  send_key_event_core(ke_msg);
 }
 
 
-static void temp_hs_test(void){
+static void send_handshake(void){
   handshake_message_t hs_msg;
 
   hs_msg.header.message_type = MSG_HANDSHAKE;
@@ -135,10 +155,10 @@ static void temp_hs_test(void){
   hs_msg.data.hs_protocol_ver = REMOTE_KB_PROTOCOL_VER;
   hs_msg.data.hs_message_sender = rm_config.host;
 
-  send_handshake_message(hs_msg);
+  send_handshake_core(hs_msg);
 }
 
-//TODO: rename raw msg to include buffer
+//TODO: rename raw msg to include buffer?
 static void parse_message_v2(uint8_t *raw_msg) {
   //TODO: pack to message_header_t struct? (cleaner way to do this?)
   uint8_t message_type = raw_msg[IDX_MESSAGE_TYPE_LENGTH] >> 4;
@@ -150,7 +170,7 @@ static void parse_message_v2(uint8_t *raw_msg) {
   DEBUG("IDX_MESSAGE_CHECKSUM: %d\n", IDX_MESSAGE_CHECKSUM);
   DEBUG("checksum: %02X\n", checksum);
 
-  // No point in packing if the checksum is wrong.
+  // No point in packing if the checksum is wrong. Right?
   if (checksum != raw_msg[IDX_MESSAGE_CHECKSUM]) {
     DEBUG("checksum mismatch!\n");
     return;
@@ -159,15 +179,18 @@ static void parse_message_v2(uint8_t *raw_msg) {
   switch (message_type) {
     case MSG_HANDSHAKE: {
       DEBUG("msg type: MSG_HANDSHAKE\n");
+      // Only send a handshake back if the message is from the host.
       if (!rm_config.host) {
-        temp_hs_test();
+        wait_ms(1);
+        send_handshake();
       }
       //TODO: better to do in place?
-      handshake_data_t hs_msg = pack_handshake_message(&raw_msg[IDX_MESSAGE_PAYLOAD]);
-      handle_handshake(hs_msg);
+      handshake_data_t hs_data = pack_handshake_message(&raw_msg[IDX_MESSAGE_PAYLOAD]);
+      handle_handshake(hs_data);
     } break;
     case MSG_KEY_EVENT:
       DEBUG("msg type: MSG_KEY_EVENT\n");
+      pack_key_event_message(&raw_msg[IDX_MESSAGE_PAYLOAD]);
       break;
     default:
       DEBUG("Unknown message type: %d\n", message_type);
@@ -196,15 +219,15 @@ static uint8_t chksum8(const unsigned char *buf, size_t len) {
 }
 
 // V1 send message function
-static void send_keyevent_msg_v1(key_event_data_t ke_msg) {
-  if (IS_HID_KC(ke_msg.keycode) || IS_RM_KC(ke_msg.keycode)) {
+static void send_keyevent_msg_v1(key_event_data_t ke_data) {
+  if (IS_HID_KC(ke_data.keycode) || IS_RM_KC(ke_data.keycode)) {
     uint8_t raw_msg[UART_MSG_LEN];
 
-    INFO("Remote: send [%u]\n", ke_msg.keycode);
+    INFO("Remote: send [%u]\n", ke_data.keycode);
     raw_msg[IDX_PREAMBLE] = UART_PREAMBLE;
-    raw_msg[IDX_KCLSB] = (ke_msg.keycode & 0xFF);
-    raw_msg[IDX_KCMSB] = (ke_msg.keycode >> 8) & 0xFF;
-    raw_msg[IDX_PRESSED] = ke_msg.pressed;
+    raw_msg[IDX_KCLSB] = (ke_data.keycode & 0xFF);
+    raw_msg[IDX_KCMSB] = (ke_data.keycode >> 8) & 0xFF;
+    raw_msg[IDX_PRESSED] = ke_data.pressed;
     raw_msg[IDX_CHECKSUM] = chksum8(raw_msg, UART_MSG_LEN-1);
 
     for (int i=0; i<UART_MSG_LEN; i++) {
@@ -244,35 +267,70 @@ static void parse_message_v1(uint8_t *raw_msg) {
 }
 
 //TODO: buffer boudns checks!
-static void get_message(void) {
+static inline void get_message(void) {
   if (!uart_available()) return;
   
   uint16_t start_time = timer_read();
+
+  // TODO: testing to see if we are racing
+  /*
+  yep. so, either leave delay, OR 
+  perhaps it makes more sense to change
+  the architecture to read packets as 
+  they come in, and then read a certain
+  number of bytes at a time, and 
+  timeout if we don't get a full packet.
+  */
+  wait_ms(1);
+
   uint8_t raw_msg[RMKB_MSG_BUFFSIZE] = {0};
   uint16_t timer_val[RMKB_MSG_BUFFSIZE] = {0};
   uint8_t raw_msg_idx = 0;
+  uint8_t bytes_read = 0;
 
   while (uart_available()) {
     raw_msg[raw_msg_idx] = uart_getchar();
     timer_val[raw_msg_idx] = timer_read();  
 
-    //TODO: this is gross, clean it up (broken anyways)
-    if (raw_msg_idx == 0 && (raw_msg[raw_msg_idx] != UART_PREAMBLE && raw_msg[raw_msg_idx] != RMKB_MSG_PREAMBLE )) {
-      ERROR("Byte sync error!\n");
-      ERROR("start time: %u\n",start_time);
-      for (int i=0; i<RMKB_MSG_BUFFSIZE; i++) {
-        ERROR("idx: %d, recv: 0x%02X, time: %u\n", i, raw_msg[i], timer_val[i]);
+    if (raw_msg_idx == 0) {
+      if (raw_msg[raw_msg_idx] != UART_PREAMBLE && raw_msg[raw_msg_idx] != RMKB_MSG_PREAMBLE ) {
+        wait_ms(20);
+        ERROR("Byte sync error!\n");
+        ERROR("start time: %u, bytes read: %u\n", start_time, bytes_read);
+        for (int i=0; i<RMKB_MSG_BUFFSIZE; i++) {
+          ERROR("idx: %d, recv: 0x%02X, time: %u\n", i, raw_msg[i], timer_val[i]);
+        }
+        wait_ms(20);
+        raw_msg_idx = 0;
+      } else {
+        raw_msg_idx++;
+        bytes_read++;
+        
+        if (raw_msg_idx == RMKB_MSG_BUFFSIZE) {
+          ERROR("Buffer overflow!\n");
+          raw_msg_idx = 0;
+        }
       }
-      raw_msg_idx = 0;
     } else {
       raw_msg_idx++;
+      bytes_read++;
+      if (raw_msg_idx == RMKB_MSG_BUFFSIZE) {
+        ERROR("Buffer overflow!\n");
+        raw_msg_idx = 0;
+      }
     }
   }
+  #if DLEVEL >=2
+  uint16_t end_time = timer_read();
+  wait_ms(20);
+  DEBUG("start time: %u, end time: %u, bytes read: %u\n", start_time, end_time, bytes_read);
   for (int i=0; i<RMKB_MSG_BUFFSIZE; i++) {
     DEBUG("idx: %d, recv: 0x%02X, time: %u\n", i, raw_msg[i], timer_val[i]);
   }
+  wait_ms(20);
+  #endif
 
-  if ((raw_msg[IDX_PREAMBLE] == RMKB_MSG_PREAMBLE) || (rm_config.protocol_ver == 2 && rm_config.connected)) {
+  if ((raw_msg[IDX_PREAMBLE] == RMKB_MSG_PREAMBLE) || (rm_config.connected && rm_config.protocol_ver == 2)) {
     parse_message_v2(raw_msg);
   } else {
     parse_message_v1(raw_msg);
@@ -286,13 +344,13 @@ static void handle_incoming_messages(void) {
   get_message();
 }
 
-static void remote_kb_send_keycode(key_event_data_t ke_msg) {
+static void remote_kb_send_keycode(key_event_data_t ke_data) {
   // Only send if not the host
   if (!rm_config.host) {
     if (rm_config.protocol_ver == 2 && rm_config.connected) {
-      send_key_event(ke_msg);
+      send_key_event(ke_data);
     } else {
-      send_keyevent_msg_v1(ke_msg);
+      send_keyevent_msg_v1(ke_data);
     }
   }
 }
@@ -307,21 +365,23 @@ static void host_detect(void) {
   #endif
 }
 
-static void print_status(void) {
-  if (timer_elapsed(rm_config.status_timer) >= STATUS_TIMEOUT_MS) {
-    INFO("connected: %s\n", rm_config.connected ? "true" : "false");
-    INFO("host: %s\n", rm_config.host ? "true" : "false");
-    INFO("protocol_ver: %d\n", rm_config.protocol_ver);
-    rm_config.status_timer = timer_read();
-  }
-}
+// static void print_status(void) {
+//   if (timer_elapsed(rm_config.status_timer) >= STATUS_TIMEOUT_MS) {
+//     INFO("connected: %s\n", rm_config.connected ? "true" : "false");
+//     INFO("host: %s\n", rm_config.host ? "true" : "false");
+//     INFO("protocol_ver: %d\n", rm_config.protocol_ver);
+//     rm_config.status_timer = timer_read();
+//   }
+// }
 
 //TODO: do this every x seconds to re-establish connection
 //TODO: set connected=false first in case of disconnect? worth? idk
 static void remote_kb_send_handshake(void) {
+  static int hs_count = 0;
   if (timer_elapsed(rm_config.handshake_timer) >= HANDSHAKE_TIMEOUT_MS) {
-    INFO("Sending HS\n");
-    temp_hs_test();
+    hs_count++;
+    INFO("Sending HS %d\n", hs_count);
+    send_handshake();
     rm_config.handshake_timer = timer_read();
   }
   return;
@@ -337,15 +397,15 @@ void matrix_init_remote_kb(void) {
 
 // Send keystrokes from local to remote
 void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {
-  key_event_data_t ke_msg;
-  ke_msg.keycode = keycode;
-  ke_msg.pressed = record->event.pressed;
-  remote_kb_send_keycode(ke_msg);
+  key_event_data_t ke_data;
+  ke_data.keycode = keycode;
+  ke_data.pressed = record->event.pressed;
+  remote_kb_send_keycode(ke_data);
 }
 
 // Receive keystrokes from remote to local
 void matrix_scan_remote_kb(void) {
-  print_status(); //DEBUG
+  // print_status(); //DEBUG
 
   // Only send handshakes if host
   if (!rm_config.connected && rm_config.host) {
