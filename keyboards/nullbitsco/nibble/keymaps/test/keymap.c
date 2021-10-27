@@ -33,11 +33,13 @@ void keyboard_post_init_user(void) {
   wait_ms(2000);
 }
 
+ 
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [_MA] = LAYOUT_ansi(
              _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
+    _______, _______, _______, RGB_HUD, RGB_HUI, RGB_RMOD, RGB_MOD, RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______,
+    _______, _______, _______, _______, RGB_VAD, RGB_VAI, RGB_SAD, RGB_SAI, _______, _______, _______, _______, _______,          _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
     _______, _______, _______, _______,                   _______,                   _______, _______, _______, _______,          _______, _______
   ),
@@ -54,33 +56,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   // Send keystrokes to host keyboard, if connected (see readme)
   process_record_remote_kb(keycode, record);
-  switch(keycode) {
-    case KC_CUST: //custom macro
-      if (record->event.pressed) {
-      }
-    break;
-
-    case RM_1: //remote macro 1
-      if (record->event.pressed) {
-      }
-    break;
-
-    case RM_2: //remote macro 2
-      if (record->event.pressed) {
-      }
-    break;
-
-    case RM_3: //remote macro 3
-      if (record->event.pressed) {
-      }
-    break;
-
-    case RM_4: //remote macro 4
-      if (record->event.pressed) {
-      }
-    break;
-
-  }
 return true;
 }
 

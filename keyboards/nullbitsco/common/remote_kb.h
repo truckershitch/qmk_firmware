@@ -23,8 +23,7 @@ enum remote_kb_message_type {
   MSG_BASE = 0, // Message 0 is always reserved
   MSG_HANDSHAKE,
   MSG_KEY_EVENT,
-  MSG_ENCODER_EVENT,
-  MSG_LED_SYNC,   // TODO
+  MSG_RGB_SYNC, 
   MSG_OLED_SYNC,  // TODO
   NUM_MSGS, // Not a message
 };
@@ -33,11 +32,11 @@ enum remote_kb_message_type {
 // Message size in bytes
 // TODO: this really isn't that useful, 
 // only for arbitraty length messages. but the size
-// of these are known.
+// of these are known, unless they are unpacked as they arrive.
 enum remote_kb_message_size {
   MSG_LEN_HS = 1,
   MSG_LEN_KEY_EVENT = 3,
-  MSG_LEN_ENC_EVENT = 2,
+  MSG_LEN_RGB_EVENT = 4,
   MSG_LEN_REMOTE_KB_MSG = 4,
 };
 
@@ -48,6 +47,7 @@ typedef struct remote_kb_config {
   uint8_t protocol_ver : 6;   // Counterparty's protocol ver
   uint16_t handshake_timer;   // Timer for throttling HS packets
   uint16_t status_timer;      // Timer for printing status
+  uint32_t rgb_state;         // Current RGB state
 } remote_kb_config;
 
 typedef struct message_header_t {
@@ -65,10 +65,9 @@ typedef struct key_event_data_t {
   uint8_t pressed;        // Pressed or not
 } key_event_data_t;
 
-//TODO: use
-// typedef struct encoder_event_data_t {
-//   uint16_t keycode;       // Keycode
-// } encoder_event_data_t;
+typedef struct rgb_data_t {
+  uint32_t rgb_state;     // RGB state
+} rgb_data_t;
 
 typedef struct handshake_message_t {
   message_header_t header;
@@ -80,6 +79,11 @@ typedef struct key_event_message_t {
   key_event_data_t data;
 } key_event_message_t;
 
+typedef struct rgb_event_message_t {
+  message_header_t header;
+  rgb_data_t data;
+} rgb_event_message_t;
+
 enum remote_kb_message_idx {
   IDX_MESSAGE_PREAMBLE = 0,
   IDX_MESSAGE_TYPE_LENGTH,
@@ -87,6 +91,7 @@ enum remote_kb_message_idx {
   NUM_IDX,                // Not an index
 };
 
+// TODO: seperate configurations from defines
 #define REMOTE_KB_PROTOCOL_VER 2
 #define SERIAL_UART_BAUD 153600 // Low error rate for 32u4 @ 16MHz
 
@@ -97,7 +102,9 @@ enum remote_kb_message_idx {
 #define RMKB_MSG_PREAMBLE 0x68
 #define RMKB_MSG_BUFFSIZE 8
 #define HANDSHAKE_TIMEOUT_MS 5000
-#define STATUS_TIMEOUT_MS 5000
+#define DEFAULT_TAP_DELAY 3
+#define PRESSED true
+#define RELEASED false
 
 // Protocol V1
 
@@ -111,25 +118,15 @@ enum remote_kb_message_idx {
 #define IDX_PRESSED   3
 #define IDX_CHECKSUM  4
 
-#define IS_HID_KC(x) ((x > 0) && (x < 0xFF))
-#define IS_RM_KC(x) ((x >= RM_BASE) && (x <= 0xFFFF))
-
-
-#define RM_BASE 0xFFFF-16
-enum remote_macros {
-  RM_1 = RM_BASE,
-  RM_2,  RM_3,
-  RM_4,  RM_5,
-  RM_6,  RM_7,
-  RM_8,  RM_9,
-  RM_10, RM_11,
-  RM_12, RM_13,
-  RM_14, RM_15,
-};
-
-
-// Public functions
+// -------------- Public functions -------------- //
+// V2
 void
- matrix_init_remote_kb(void),
- process_record_remote_kb(uint16_t keycode, keyrecord_t *record),
- matrix_scan_remote_kb(void);
+  tap_code_remote_kb(uint16_t keycode),
+  register_code_remote_kb(uint16_t keycode),
+  unregister_code_remote_kb(uint16_t keycode);
+
+// V1
+void
+  matrix_init_remote_kb(void),
+  process_record_remote_kb(uint16_t keycode, keyrecord_t *record),
+  matrix_scan_remote_kb(void);

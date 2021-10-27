@@ -4,7 +4,7 @@
 #define LINFO  1
 #define LDEBUG 2
 
-#define DLEVEL LDEBUG //0: Error, 1: Info, 2: Debug
+#define DLEVEL LINFO //0: Error, 1: Info, 2: Debug
 
 #define SERROR "ERROR"
 #define SINFO  "INFO "
