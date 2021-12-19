@@ -19,49 +19,6 @@
 #include "nb_logging.h"
 #include <string.h>
 
-typedef struct remote_kb_config {
-  bool connected : 1;             // Set after getting a HS packet
-  bool host : 1;                  // Set after reading VBUS (or defines)
-  uint8_t protocol_ver : 6;       // Counterparty's protocol ver
-  uint16_t handshake_timer;       // Timer for throttling HS packets
-  uint16_t status_timer;          // Timer for printing status
-  uint32_t rgb_state;             // Current RGB state
-} remote_kb_config;
-
-typedef struct message_header_t {
-  uint8_t message_type : 4;       // remote_kb_message_type
-  uint8_t message_length : 4;     // Message payload length
-} message_header_t;
-
-typedef struct handshake_data_t {
-  uint8_t hs_protocol_ver : 7;    // Protocol version
-  uint8_t hs_message_sender : 1;  // Message sender (HOST or REMOTE)
-} handshake_data_t;
-
-typedef struct key_event_data_t {
-  uint16_t keycode;               // Keycode
-  uint8_t pressed;                // Pressed or not
-} key_event_data_t;
-
-typedef struct rgb_data_t {
-  uint32_t rgb_state;             // RGB state
-} rgb_data_t;
-
-typedef struct handshake_message_t {
-  message_header_t header;        // Message header
-  handshake_data_t data;          // Handshake data
-} handshake_message_t;
-
-typedef struct key_event_message_t {
-  message_header_t header;        // Message header
-  key_event_data_t data;          // Key event data
-} key_event_message_t;
-
-typedef struct rgb_event_message_t {
-  message_header_t header;        // Message header
-  rgb_data_t data;                // RGB data
-} rgb_event_message_t;
-
 #define REMOTE_KB_PROTOCOL_VER 2
 #define SERIAL_UART_BAUD 153600 // Low error rate for 32u4 @ 16MHz
 
@@ -75,6 +32,64 @@ typedef struct rgb_event_message_t {
 #define RMKB_MSG_BUFFSIZE 8
 #define HANDSHAKE_TIMEOUT_MS 1000
 #define DEFAULT_TAP_DELAY 3
+
+// Protocol V1
+#define MSG_PREAMBLE_V1 0x69
+
+typedef struct {
+  bool connected : 1;             // Set after getting a HS packet
+  bool host : 1;                  // Set after reading VBUS (or defines)
+  uint8_t protocol_ver : 6;       // Counterparty's protocol ver
+  uint16_t handshake_timer;       // Timer for throttling HS packets
+  uint16_t status_timer;          // Timer for printing status // TODO: needed?
+  uint32_t rgb_state;             // Current RGB state
+} remote_kb_config;
+
+typedef union {
+  uint8_t raw;
+  struct {
+    uint8_t message_type : 4;       // remote_kb_message_type
+    uint8_t message_length : 4;     // Message payload length
+  };
+} message_header_t;
+
+typedef union {
+  uint8_t raw;
+  struct {
+    uint8_t hs_protocol_ver : 7;    // Protocol version
+    uint8_t hs_message_sender : 1;  // Message sender (HOST or REMOTE)
+  };
+} handshake_data_t;
+
+// TODO: union to avoid shifting?
+typedef struct {
+  uint16_t keycode;               // Keycode
+  uint8_t pressed;                // Pressed or not
+} key_event_data_t;
+
+// TODO: union to avoid shifting?
+typedef struct {
+  uint32_t rgb_state;             // RGB state
+} rgb_data_t;
+
+// TODO: consider getting rid of these
+// since the header format is constant
+// and the data is what matters.
+// Can still cast the header for ez manipulation
+typedef struct {
+  message_header_t header;        // Message header
+  handshake_data_t data;          // Handshake data
+} handshake_message_t;
+
+typedef struct {
+  message_header_t header;        // Message header
+  key_event_data_t data;          // Key event data
+} key_event_message_t;
+
+typedef struct {
+  message_header_t header;        // Message header
+  rgb_data_t data;                // RGB data
+} rgb_event_message_t;
 
 // Message types
 enum remote_kb_message_type {
@@ -93,7 +108,7 @@ enum remote_kb_message_idx {
   NUM_IDX,                   // Not an index
 };
 
-// Message size in bytes (data only, not header)
+// Message size in bytes (data only)
 enum remote_kb_message_length {
   MSG_LEN_HEADER = 2,         // Message header length
   MSG_LEN_HS = 1,             // Handshake message length
@@ -103,10 +118,7 @@ enum remote_kb_message_length {
   MSG_LEN_CHECKSUM = 1,       // Message checksum length
 };
 
-// Protocol V1
-#define MSG_PREAMBLE_V1 0x69
-
-// Message indexes
+// Message indexes (protocol V1)
 enum remote_kb_v1_message_idx {
   IDX_PREAMBLE_V1 = 0,        // Message preamble
   IDX_KCLSB,                  // Keycode LSB

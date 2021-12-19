@@ -115,24 +115,9 @@ static void handle_rgb(rgb_data_t rgb_data) {
   }
 }
 
+// TODO: kill these
 // -------------- Message packing --------------- //
-// Message header packing
-static message_header_t pack_message_header(uint8_t * raw_msg_buf) {
-  message_header_t msg_header;
-  msg_header.message_type = raw_msg_buf[IDX_MESSAGE_TYPE_LENGTH] >> 4;
-  msg_header.message_length = raw_msg_buf[IDX_MESSAGE_TYPE_LENGTH] & 0xF;
-  DEBUG("message_type: %01X message_length: %01X\n", msg_header.message_type, msg_header.message_length);
-  return msg_header;
-}
 
-// Handshale message packing
-static handshake_data_t pack_handshake_message(uint8_t *hs_msg_buffer) {
-  handshake_data_t hs_data;
-  hs_data.hs_protocol_ver = (hs_msg_buffer[0] >> 1) & 0x7F;
-  hs_data.hs_message_sender = (hs_msg_buffer[0] & 0x01);
-  DEBUG("hs_data protocol_ver: %01X sender: %01X\n", hs_data.hs_protocol_ver, hs_data.hs_message_sender);
-  return hs_data;
-}
  // Key event message packing
 static key_event_data_t pack_key_event_message(uint8_t *key_event_msg_buffer) {
   key_event_data_t key_event_data;
@@ -165,6 +150,11 @@ static uint8_t checksum8(const unsigned char *buf, size_t len) {
 
 // Uart send
 static inline void uart_putmsg(uint8_t *msg_buffer, uint8_t message_size) {
+  #if LOG_LEVEL >= LOG_DEBUG
+    DEBUG("uart_putmsg:\n");
+    print_message_buffer(ke_msg_buffer, message_size);
+  #endif
+
   for (int i=0; i<message_size; i++) {
     uart_putchar(msg_buffer[i]);
   }
@@ -188,6 +178,10 @@ static inline void send_keyevent_msg_v1(key_event_data_t ke_data) {
   }
 }
 
+// TODO: why do it this way? why not use the same send function for 
+// every message and just pass the type/length (or some encapsulation thereof)
+// Just add the message header to the message before it's sent.
+// The header size never changes, only what's in it.
 // Send key event message
 static inline void send_key_event_core(key_event_message_t ke_msg) {
   const uint8_t message_size = MSG_LEN_HEADER + MSG_LEN_KEY_EVENT + MSG_LEN_CHECKSUM;
@@ -196,37 +190,13 @@ static inline void send_key_event_core(key_event_message_t ke_msg) {
   ke_msg_buffer[0] = MSG_PREAMBLE_V2;
   ke_msg_buffer[1] = (ke_msg.header.message_type & 0xF) << 4;
   ke_msg_buffer[1] |= (ke_msg.header.message_length & 0xF);
+
   ke_msg_buffer[2] = (ke_msg.data.keycode & 0xFF);
   ke_msg_buffer[3] = (ke_msg.data.keycode >> 8) & 0xFF;
   ke_msg_buffer[4] = ke_msg.data.pressed;
   ke_msg_buffer[5] = checksum8(ke_msg_buffer, message_size-1);
 
-  #if LOG_LEVEL >= LOG_DEBUG
-    DEBUG("uart_putchar:\n");
-    print_message_buffer(ke_msg_buffer, message_size);
-  #endif
-
   uart_putmsg(ke_msg_buffer, message_size);
-}
-
-// Send RGB event message
-static inline void send_handshake_core(handshake_message_t hs_msg) {
-  const uint8_t message_size = MSG_LEN_HEADER + MSG_LEN_HS + MSG_LEN_CHECKSUM;
-
-  uint8_t hs_msg_buffer[message_size];
-  hs_msg_buffer[0] = MSG_PREAMBLE_V2;
-  hs_msg_buffer[1] = (hs_msg.header.message_type & 0xF) << 4;
-  hs_msg_buffer[1] |= (hs_msg.header.message_length & 0xF);
-  hs_msg_buffer[2] = (hs_msg.data.hs_protocol_ver & 0x7F) << 1;
-  hs_msg_buffer[2] |= (hs_msg.data.hs_message_sender & 0x01);
-  hs_msg_buffer[3] = checksum8(hs_msg_buffer, message_size-1);
-
-  #if LOG_LEVEL >= LOG_DEBUG
-    DEBUG("uart_putchar:\n");
-    print_message_buffer(hs_msg_buffer, message_size);
-  #endif
-
-  uart_putmsg(hs_msg_buffer, message_size);
 }
 
 // Send RGB event message
@@ -237,20 +207,20 @@ static inline void send_rgb_core(rgb_event_message_t rgb_msg) {
   rgb_msg_buffer[0] = MSG_PREAMBLE_V2;
   rgb_msg_buffer[1] = (rgb_msg.header.message_type & 0xF) << 4;
   rgb_msg_buffer[1] |= (rgb_msg.header.message_length & 0xF);
+
   rgb_msg_buffer[2] = (rgb_msg.data.rgb_state & 0xFF);        //LSB
   rgb_msg_buffer[3] = (rgb_msg.data.rgb_state >> 8) & 0xFF;
   rgb_msg_buffer[4] = (rgb_msg.data.rgb_state >> 16) & 0xFF;
   rgb_msg_buffer[5] = (rgb_msg.data.rgb_state >> 24) & 0xFF;  //MSB
   rgb_msg_buffer[6] = checksum8(rgb_msg_buffer, message_size-1);
 
-  #if LOG_LEVEL >= LOG_DEBUG
-    DEBUG("uart_putchar:\n");
-    print_message_buffer(rgb_msg_buffer, message_size);
-  #endif
-
   uart_putmsg(rgb_msg_buffer, message_size);
 }
 
+// TODO: it's silly to have two levels of abstraction here
+// What does this buy? Find a way to reduce it to one.
+// Either merge the two levels of send between message types
+// or use a common send function.
 // ------------ High-level senders -------------- //
 // Send key event message
 static void send_key_event(key_event_data_t ke_data) {
@@ -267,14 +237,27 @@ static void send_key_event(key_event_data_t ke_data) {
 
 // Send handshake message
 static void send_handshake(void){
-  handshake_message_t hs_msg;
+  message_header_t msg_header;
+  msg_header.message_type = MSG_HANDSHAKE;
+  msg_header.message_length = MSG_LEN_HS;
 
-  hs_msg.header.message_type = MSG_HANDSHAKE;
-  hs_msg.header.message_length = MSG_LEN_HS;
-  hs_msg.data.hs_protocol_ver = REMOTE_KB_PROTOCOL_VER;
-  hs_msg.data.hs_message_sender = rm_config.host;
+  handshake_data_t hs_msg;
+  hs_msg.hs_protocol_ver = REMOTE_KB_PROTOCOL_VER;
+  hs_msg.hs_message_sender = rm_config.host;
 
-  send_handshake_core(hs_msg);
+  // TODO: can save on computing this by changing how the lengths are used?
+  // There should be no reason this has to be done.
+  // The length can probably be inferred or something with sizeof()
+  // or defined in the header file with the total length
+  const uint8_t message_size = MSG_LEN_HEADER + MSG_LEN_HS + MSG_LEN_CHECKSUM;
+
+  uint8_t hs_msg_buffer[message_size];
+  hs_msg_buffer[0] = MSG_PREAMBLE_V2;
+  hs_msg_buffer[1] = msg_header.raw;
+  hs_msg_buffer[2] = hs_msg.raw;
+  hs_msg_buffer[3] = checksum8(hs_msg_buffer, message_size-1);
+
+  uart_putmsg(hs_msg_buffer, message_size);
 }
 
 // Send RGB event message
@@ -293,8 +276,9 @@ static void send_rgb(void) {
 // -------------- Message parsing --------------- //
 // Generic message parser
 static void parse_message(uint8_t *raw_msg_buf) {
-  message_header_t msg_header = pack_message_header(raw_msg_buf);
+  message_header_t msg_header = (message_header_t)raw_msg_buf[IDX_MESSAGE_TYPE_LENGTH];
 
+  //TODO: if changing message_size change this too
   uint16_t idx_checksum = IDX_MESSAGE_PAYLOAD + msg_header.message_length;
   uint8_t checksum = checksum8(raw_msg_buf, idx_checksum);
   DEBUG("idx_checksum: %d\n", idx_checksum);
@@ -308,7 +292,7 @@ static void parse_message(uint8_t *raw_msg_buf) {
   switch (msg_header.message_type) {
     case MSG_HANDSHAKE: {
       DEBUG("msg type: MSG_HANDSHAKE\n");
-      handshake_data_t hs_data = pack_handshake_message(&raw_msg_buf[IDX_MESSAGE_PAYLOAD]);
+      handshake_data_t hs_data = (handshake_data_t)raw_msg_buf[IDX_MESSAGE_PAYLOAD];
       handle_handshake(hs_data);
     } break;
 
