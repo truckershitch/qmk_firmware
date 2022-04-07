@@ -28,8 +28,24 @@
 #define GPIO_STATE_LOW  0
 #define GPIO_STATE_HIGH 1
 
+typedef struct {
+  uint8_t r : 4;
+  uint8_t g : 4;
+  uint8_t b : 4;
+  uint8_t r_pwm : 4;
+  uint8_t b_pwm : 4;
+  uint8_t g_pwm : 4;
+} rgb_led;
+
 void
   set_big_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode),
   set_big_LED_r(uint8_t mode),
   set_big_LED_g(uint8_t mode),
   set_big_LED_b(uint8_t mode);
+
+void
+  matrix_scan_big_LED(void),
+  set_big_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm),
+  set_big_LED_r_pwm(uint8_t pwm),
+  set_big_LED_g_pwm(uint8_t pwm),
+  set_big_LED_b_pwm(uint8_t pwm);

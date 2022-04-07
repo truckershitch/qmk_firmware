@@ -15,6 +15,8 @@
  */
 #include "big_led.h"
 
+static rgb_led big_led = { 0, 0, 0, 0, 5, 10 };
+
 void set_big_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode) {
     set_big_LED_r(r_mode);
     set_big_LED_g(g_mode);
@@ -70,4 +72,32 @@ void set_big_LED_b(uint8_t mode) {
         default:
         break;
     }
+}
+
+inline void matrix_scan_big_LED(void) {
+    big_led.r_pwm++;
+    big_led.g_pwm++;
+    big_led.b_pwm++;
+
+    big_led.r_pwm < big_led.r ? set_big_LED_r(LED_ON) : set_big_LED_r(LED_OFF);
+    big_led.g_pwm < big_led.g ? set_big_LED_g(LED_ON) : set_big_LED_g(LED_OFF);
+    big_led.b_pwm < big_led.b ? set_big_LED_b(LED_ON) : set_big_LED_b(LED_OFF);
+}
+
+void set_big_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm) {
+    big_led.r = r_pwm;
+    big_led.g = g_pwm;
+    big_led.b = b_pwm;
+}
+
+void set_big_LED_r_pwm(uint8_t pwm) {
+    big_led.r = pwm;
+}
+
+void set_big_LED_g_pwm(uint8_t pwm) {
+    big_led.g = pwm;
+}
+
+void set_big_LED_b_pwm(uint8_t pwm) {
+    big_led.b = pwm;
 }
