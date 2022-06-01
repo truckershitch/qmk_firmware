@@ -15,21 +15,26 @@
  */
 #pragma once
 
-#include "quantum.h"
+#include "config_common.h"
 
-/* Optional big LED pins */
-#define BIG_LED_R_PIN D7
-#define BIG_LED_G_PIN C6
-#define BIG_LED_B_PIN D0
+/* key matrix pins */
+#define MATRIX_ROW_PINS { GP22, GP7, GP6, GP5, GP4 }
+#define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
 
-#define LED_ON          2
-#define LED_OFF         0
+/* Optional encoder pins */
+#ifdef OLED_ENABLE
+#define ENCODERS_PAD_A { GP23, GP8, NO_PIN, GP0 }
+#define ENCODERS_PAD_B { GP20, GP9, NO_PIN, GP1 }
+#else
+#define ENCODERS_PAD_A { GP23, GP8, GP2, GP0 }
+#define ENCODERS_PAD_B { GP20, GP9, GP3, GP1 }
+#endif
 
-#define GPIO_STATE_LOW  0
-#define GPIO_STATE_HIGH 1
+/* Optional SMT LED pins */
+#define RGB_DI_PIN GP21
 
-void
-  set_big_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode),
-  set_big_LED_r(uint8_t mode),
-  set_big_LED_g(uint8_t mode),
-  set_big_LED_b(uint8_t mode);
+/* RP2040-specific defines*/
+#define RP2040_FLASH_W25X10CL
+#define I2C1_SDA_PIN GP2
+#define I2C1_SCL_PIN GP3
+#define I2C_DRIVER I2CD2

@@ -13,25 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "bitc_led.h"
+#pragma once
 
-void set_bitc_LED(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_HIGH);
-        break;
+#include "config_common.h"
 
-        case LED_DIM:
-            setPinInput(PIN_LED);
-        break;
+/* Used to set remote for remote KB if VUSB detect doesn't work. */
+// #define KEYBOARD_REMOTE
 
-        case LED_OFF:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_LOW);
-        break;
+// Workaround for freezing after MacOS sleep
+#define USB_SUSPEND_WAKEUP_DELAY 200
 
-        default:
-        break;
-    }
-}
+/*
+ * Keyboard Matrix Assignments
+ * The nibble uses a demultiplexer for the cols.
+ * to free up more IOs for awesomeness!
+ * See matrix.c for more details.
+*/
+#define MATRIX_ROW_PINS { B1, B3, B2, B6, D4 }
+#define MATRIX_COL_MUX_PINS { F4, F5, F6, F7 }
+#define MATRIX_COL_PINS { }
+
+/* Optional SMT LED pins */
+#define RGB_DI_PIN E6
+
+/* Optional encoder pins */
+#define ENCODERS_PAD_A { B5 }
+#define ENCODERS_PAD_B { B4 }

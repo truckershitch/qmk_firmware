@@ -15,26 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include QMK_KEYBOARD_H
+/* NOTE: This config file is specific to RP2040 builds. */
 
-// place overrides here
-void set_scramble_LED(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_HIGH);
-        break;
+#pragma once
 
-        case LED_DIM:
-            setPinInput(PIN_LED);
-        break;
+#define TAP_CODE_DELAY 10
 
-        case LED_OFF:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_LOW);
-        break;
-
-        default:
-        break;
-    }
-}
+/* RP2040-specific defines*/
+#define RP2040_FLASH_GENERIC_03H
+#define I2C1_SDA_PIN GP26
+#define I2C1_SCL_PIN GP27
+#define I2C_DRIVER I2CD1
