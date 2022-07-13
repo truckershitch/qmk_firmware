@@ -19,5 +19,4 @@ OLED_ENABLE = yes
 VIA_ENABLE = yes
 ENCODER_ENABLE = yes
 RGBLIGHT_ENABLE = yes
-EEPROM_DRIVER = transient
 AUDIO_ENABLE = no #not yet supported

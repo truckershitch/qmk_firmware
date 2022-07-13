@@ -24,13 +24,20 @@
 #define MANUFACTURER    nullbits
 #define PRODUCT         TIDBIT
 
-/* key matrix size */
-#define MATRIX_ROWS 5
-#define MATRIX_COLS 6
+/* key matrix pins */
+#define MATRIX_ROW_PINS { GP22, GP7, GP6, GP5, GP4 }
+#define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
 
-/* COL2ROW or ROW2COL */
-#define DIODE_DIRECTION ROW2COL
+/* Optional encoder pins */
+#define ENCODERS_PAD_A { GP23, GP8, GP3, GP0 }
+#define ENCODERS_PAD_B { GP20, GP9, GP2, GP1 }
 
 /* Optional SMT LED pins */
-#define RGBLED_NUM 8
-#define RGBLIGHT_ANIMATIONS
+#define RGB_DI_PIN GP21
+
+/* RP2040-specific defines*/
+#define RP2040_FLASH_W25X10CL
+#define I2C1_SDA_PIN GP2
+#define I2C1_SCL_PIN GP3
+#define I2C_DRIVER I2CD2
+

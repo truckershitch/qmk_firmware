@@ -13,29 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "bitc_led.h"
+#pragma once
 
-#if defined(MCU_RP)
-void set_bitc_LED(uint8_t mode) {}
-#else
-void set_bitc_LED(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_HIGH);
-        break;
+#include "config_common.h"
 
-        case LED_DIM:
-            setPinInput(PIN_LED);
-        break;
+/* Used to set remote for remote KB if VUSB detect doesn't work. */
+// #define KEYBOARD_REMOTE
 
-        case LED_OFF:
-            setPinOutput(PIN_LED);
-            writePin(PIN_LED, GPIO_STATE_LOW);
-        break;
+// Workaround for freezing after MacOS sleep
+#define USB_SUSPEND_WAKEUP_DELAY 200
 
-        default:
-        break;
-    }
-}
-#endif // MCU_RP
+/* key matrix pins */
+#define MATRIX_ROW_PINS { B1, E6, D7, C6, D4 }
+#define MATRIX_COL_PINS { NO_PIN, NO_PIN, F4, F5, F6, F7 }
+#define UNUSED_PINS
+
+/* Optional SMT LED pins */
+#define RGB_DI_PIN B6
+
+/* Optional encoder pins */
+#define ENCODERS_PAD_A { B2, B4, D0, D3 }
+#define ENCODERS_PAD_B { B3, B5, D1, D2 }

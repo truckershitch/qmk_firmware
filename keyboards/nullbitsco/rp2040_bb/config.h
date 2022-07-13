@@ -37,10 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MATRIX_COL_PINS { GP4, GP5 }
 #define MATRIX_ROW_PINS { GP6, GP7, GP8 }
 
-#define RP2040_FLASH_AT25SF128A
-#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
-#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_LED GP24
-#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_TIMEOUT 500U
+#define RP2040_FLASH_W25X10CL
 
 /* Optional SMT LED pins */
 #define RGB_DI_PIN GP19
@@ -60,4 +57,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Debug configs */
 #define DEBUG_MATRIX_SCAN_RATE
-#define TRANSIENT_EEPROM_SIZE 256

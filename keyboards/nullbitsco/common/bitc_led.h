@@ -24,6 +24,13 @@
 #define GPIO_STATE_LOW  0
 #define GPIO_STATE_HIGH 1
 
+// TODO: better thing to check with than this?
+#if defined(MCU_RP)
+#define PIN_LED_R       GP16
+#define PIN_LED_G       GP17
+#define PIN_LED_B       GP18
+#else
 #define PIN_LED         F0
+#endif // MCU_RP
 
 void set_bitc_LED(uint8_t mode);
