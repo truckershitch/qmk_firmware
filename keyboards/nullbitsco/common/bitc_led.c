@@ -16,7 +16,77 @@
 #include "bitc_led.h"
 
 #if defined(MCU_RP)
-void set_bitc_LED(uint8_t mode) {}
+void set_bitc_LED_R(uint8_t mode) {
+    switch(mode) {
+        case LED_ON:
+            setPinOutput(PIN_LED_R);
+            writePin(PIN_LED_R, GPIO_STATE_LOW);
+        break;
+
+        case LED_DIM:
+            setPinInputLow(PIN_LED_R);
+        break;
+
+        case LED_OFF:
+            setPinOutput(PIN_LED_R);
+            writePin(PIN_LED_R, GPIO_STATE_HIGH);
+        break;
+
+        default:
+        break;
+    }
+}
+void set_bitc_LED_G(uint8_t mode) {
+    switch(mode) {
+        case LED_ON:
+            setPinOutput(PIN_LED_G);
+            writePin(PIN_LED_G, GPIO_STATE_LOW);
+        break;
+
+        case LED_DIM:
+            setPinInputLow(PIN_LED_G);
+        break;
+
+        case LED_OFF:
+            setPinOutput(PIN_LED_G);
+            writePin(PIN_LED_G, GPIO_STATE_HIGH);
+        break;
+
+        default:
+        break;
+    }
+}
+void set_bitc_LED_B(uint8_t mode) {
+    switch(mode) {
+        case LED_ON:
+            setPinOutput(PIN_LED_B);
+            writePin(PIN_LED_B, GPIO_STATE_LOW);
+        break;
+
+        case LED_DIM:
+            setPinInputLow(PIN_LED_B);
+        break;
+
+        case LED_OFF:
+            setPinOutput(PIN_LED_B);
+            writePin(PIN_LED_B, GPIO_STATE_HIGH);
+        break;
+
+        default:
+        break;
+    }
+}
+
+void set_bitc_LED_RGB(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode) {
+    set_bitc_LED_R(r_mode);
+    set_bitc_LED_G(g_mode);
+    set_bitc_LED_B(b_mode);
+}
+
+void set_bitc_LED(uint8_t mode) {
+    set_bitc_LED_RGB(mode, mode, mode);
+}
+
 #else
 void set_bitc_LED(uint8_t mode) {
     switch(mode) {

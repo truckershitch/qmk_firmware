@@ -175,6 +175,7 @@ void matrix_scan_remote_kb(void) {
 
 #else
 // No support on other platforms, yet
+// TODO: add RP2040 support
 void matrix_init_remote_kb(void) {}
 void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {}
 void matrix_scan_remote_kb(void) {}
