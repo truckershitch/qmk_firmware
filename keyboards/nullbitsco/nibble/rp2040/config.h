@@ -17,18 +17,25 @@
 
 #include "config_common.h"
 
-/* key matrix pins */
-#define MATRIX_ROW_PINS { GP22, GP7, GP6, GP5, GP4 }
-#define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
-
-/* Optional encoder pins */
-#define ENCODERS_PAD_A { GP23, GP8, NO_PIN, GP0 }
-#define ENCODERS_PAD_B { GP20, GP9, NO_PIN, GP1 }
+/*
+ * Keyboard Matrix Assignments
+ * The nibble uses a demultiplexer for the cols.
+ * to free up more IOs for awesomeness!
+ * See matrix.c for more details.
+*/
+#define MATRIX_ROW_PINS { GP22, GP20, GP23, GP21, GP4 }
+#define MATRIX_COL_MUX_PINS { GP29, GP28, GP27, GP26 }
+#define MATRIX_COL_PINS { }
 
 /* Optional SMT LED pins */
-#define RGB_DI_PIN GP21
+#define RGB_DI_PIN GP7
+
+/* Optional encoder pins */
+#define ENCODERS_PAD_A { GP9 }
+#define ENCODERS_PAD_B { GP8 }
 
 /* RP2040-specific defines*/
+// TODO: needed if using default config?
 #define RP2040_FLASH_W25X10CL
 #define I2C1_SDA_PIN GP2
 #define I2C1_SCL_PIN GP3

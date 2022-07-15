@@ -18,9 +18,15 @@
 #include "quantum.h"
 
 /* Optional big LED pins */
+#if defined(__AVR__)
 #define BIG_LED_R_PIN D7
 #define BIG_LED_G_PIN C6
 #define BIG_LED_B_PIN D0
+#else
+#define BIG_LED_R_PIN GP6
+#define BIG_LED_G_PIN GP5
+#define BIG_LED_B_PIN GP3
+#endif
 
 #define LED_ON          2
 #define LED_OFF         0
@@ -28,8 +34,24 @@
 #define GPIO_STATE_LOW  0
 #define GPIO_STATE_HIGH 1
 
+typedef struct {
+  uint8_t r : 4;
+  uint8_t g : 4;
+  uint8_t b : 4;
+  uint8_t r_pwm : 4;
+  uint8_t b_pwm : 4;
+  uint8_t g_pwm : 4;
+} rgb_led;
+
 void
   set_big_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode),
   set_big_LED_r(uint8_t mode),
   set_big_LED_g(uint8_t mode),
   set_big_LED_b(uint8_t mode);
+
+void
+  matrix_scan_big_LED(void),
+  set_big_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm),
+  set_big_LED_r_pwm(uint8_t pwm),
+  set_big_LED_g_pwm(uint8_t pwm),
+  set_big_LED_b_pwm(uint8_t pwm);

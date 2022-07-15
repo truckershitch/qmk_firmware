@@ -17,19 +17,25 @@
 
 #include "config_common.h"
 
-/* key matrix pins */
-#define MATRIX_ROW_PINS { GP22, GP7, GP6, GP5, GP4 }
-#define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
+/* Used to set remote for remote KB if VUSB detect doesn't work. */
+// #define KEYBOARD_REMOTE
 
-/* Optional encoder pins */
-#define ENCODERS_PAD_A { GP23, GP8, NO_PIN, GP0 }
-#define ENCODERS_PAD_B { GP20, GP9, NO_PIN, GP1 }
+// Workaround for freezing after MacOS sleep
+#define USB_SUSPEND_WAKEUP_DELAY 200
+
+/*
+ * Keyboard Matrix Assignments
+ * The nibble uses a demultiplexer for the cols.
+ * to free up more IOs for awesomeness!
+ * See matrix.c for more details.
+*/
+#define MATRIX_ROW_PINS { B1, B3, B2, B6, D4 }
+#define MATRIX_COL_MUX_PINS { F4, F5, F6, F7 }
+#define MATRIX_COL_PINS { }
 
 /* Optional SMT LED pins */
-#define RGB_DI_PIN GP21
+#define RGB_DI_PIN E6
 
-/* RP2040-specific defines*/
-#define RP2040_FLASH_W25X10CL
-#define I2C1_SDA_PIN GP2
-#define I2C1_SCL_PIN GP3
-#define I2C_DRIVER I2CD2
+/* Optional encoder pins */
+#define ENCODERS_PAD_A { B5 }
+#define ENCODERS_PAD_B { B4 }
