@@ -22,8 +22,13 @@
 #define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
 
 /* Optional encoder pins */
+#ifdef OLED_ENABLE
 #define ENCODERS_PAD_A { GP23, GP8, NO_PIN, GP0 }
 #define ENCODERS_PAD_B { GP20, GP9, NO_PIN, GP1 }
+#else
+#define ENCODERS_PAD_A { GP23, GP8, GP2, GP0 }
+#define ENCODERS_PAD_B { GP20, GP9, GP3, GP1 }
+#endif
 
 /* Optional SMT LED pins */
 #define RGB_DI_PIN GP21
