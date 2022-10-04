@@ -32,5 +32,6 @@
 #define B6 21U
 
 // LEDs (Mapped to R and G channel of the Bit-C PRO's RGB led)
-#define D5 16U
-#define B0 17U
+// NOTE: changed for this branch specifically, so that it uses the TX and RX leds instead.
+#define D5 14U
+#define B0 11U
