@@ -33,9 +33,28 @@
 #endif // defined(MCU_RP)
 
 void set_scramble_LED(uint8_t mode);
+
+// RP2040-exclusive features
 #if defined(MCU_RP)
-void set_scramble_LED_R(uint8_t mode);
-void set_scramble_LED_G(uint8_t mode);
-void set_scramble_LED_B(uint8_t mode);
-void set_scramble_LED_RGB(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode);
+typedef struct {
+    uint8_t r : 4;
+    uint8_t g : 4;
+    uint8_t b : 4;
+    uint8_t r_pwm : 4;
+    uint8_t b_pwm : 4;
+    uint8_t g_pwm : 4;
+} scramble_led_rgb_t;
+
+void
+    set_scramble_LED_r(uint8_t mode),
+    set_scramble_LED_g(uint8_t mode),
+    set_scramble_LED_b(uint8_t mode),
+    set_scramble_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode);
+
+void
+    matrix_scan_scramble_LED(void),
+    set_scramble_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm),
+    set_scramble_LED_r_pwm(uint8_t pwm),
+    set_scramble_LED_g_pwm(uint8_t pwm),
+    set_scramble_LED_b_pwm(uint8_t pwm);
 #endif // MCU_RP
