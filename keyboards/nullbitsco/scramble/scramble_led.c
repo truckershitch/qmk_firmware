@@ -16,105 +16,84 @@
 #include "scramble_led.h"
 
 #if defined(MCU_RP)
-static scramble_led_rgb_t scramble_led = { 0, 0, 0, 0, 5, 10 };
-
-void set_scramble_LED_r(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED_R);
-            writePin(PIN_LED_R, GPIO_STATE_LOW);
-        break;
-
-        case LED_DIM:
-            setPinInputLow(PIN_LED_R);
-        break;
-
-        case LED_OFF:
-            setPinOutput(PIN_LED_R);
-            writePin(PIN_LED_R, GPIO_STATE_HIGH);
-        break;
-
-        default:
-        break;
-    }
-}
-void set_scramble_LED_g(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED_G);
-            writePin(PIN_LED_G, GPIO_STATE_LOW);
-        break;
-
-        case LED_DIM:
-            setPinInputLow(PIN_LED_G);
-        break;
-
-        case LED_OFF:
-            setPinOutput(PIN_LED_G);
-            writePin(PIN_LED_G, GPIO_STATE_HIGH);
-        break;
-
-        default:
-        break;
-    }
-}
-void set_scramble_LED_b(uint8_t mode) {
-    switch(mode) {
-        case LED_ON:
-            setPinOutput(PIN_LED_B);
-            writePin(PIN_LED_B, GPIO_STATE_LOW);
-        break;
-
-        case LED_DIM:
-            setPinInputLow(PIN_LED_B);
-        break;
-
-        case LED_OFF:
-            setPinOutput(PIN_LED_B);
-            writePin(PIN_LED_B, GPIO_STATE_HIGH);
-        break;
-
-        default:
-        break;
-    }
-}
-
-void set_scramble_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode) {
-    set_scramble_LED_r(r_mode);
-    set_scramble_LED_g(g_mode);
-    set_scramble_LED_b(b_mode);
-}
 
 void set_scramble_LED(uint8_t mode) {
-    set_scramble_LED_rgb(mode, mode, mode);
+    switch(mode) {
+        case LED_ON:
+            set_scramble_LED_rgb_pwm(65, 100, 95);
+        break;
+
+        case LED_DIM:
+            set_scramble_LED_rgb_pwm(3, 9, 3);
+        break;
+
+        default: //LED_OFF
+            set_scramble_LED_rgb_pwm(0, 0, 0);
+        break;
+    }
 }
 
-inline void matrix_scan_scramble_LED(void) {
-    scramble_led.r_pwm++;
-    scramble_led.g_pwm++;
-    scramble_led.b_pwm++;
+void init_pwm(void) {
+    static uint8_t init_complete = 0;
+    
+    // Only configure HW once
+    if (!init_complete) {
+        static PWMConfig pwmCFG = {
+            .frequency = PWM_PWM_COUNTER_FREQUENCY,
+            .period    = PWM_PWM_PERIOD,
+        };
 
-    scramble_led.r_pwm < scramble_led.r ? set_scramble_LED_r(LED_ON) : set_scramble_LED_r(LED_OFF);
-    scramble_led.g_pwm < scramble_led.g ? set_scramble_LED_g(LED_ON) : set_scramble_LED_g(LED_OFF);
-    scramble_led.b_pwm < scramble_led.b ? set_scramble_LED_b(LED_ON) : set_scramble_LED_b(LED_OFF);
+        // Set GPIO modes
+        palSetPadMode(PAL_PORT(PIN_LED_R), PAL_PAD(PIN_LED_R), PWM_PAL_MODE);
+        palSetPadMode(PAL_PORT(PIN_LED_G), PAL_PAD(PIN_LED_G), PWM_PAL_MODE);
+        palSetPadMode(PAL_PORT(PIN_LED_B), PAL_PAD(PIN_LED_B), PWM_PAL_MODE);
+
+        // Set pwm configuration
+        pwmCFG.channels[0].mode = PWM_OUTPUT_ACTIVE_LOW;
+        pwmCFG.channels[1].mode = PWM_OUTPUT_ACTIVE_LOW;
+
+        // Start PWM
+        pwmStart(&PWM_R_DRIVER, &pwmCFG);
+        pwmStart(&PWM_B_DRIVER, &pwmCFG);
+        pwmStart(&PWM_G_DRIVER, &pwmCFG);
+
+        // Set all channels to off after init
+        pwmEnableChannel(&PWM_R_DRIVER, PWM_R_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_R_DRIVER, 0));
+        pwmEnableChannel(&PWM_B_DRIVER, PWM_G_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_B_DRIVER, 0));
+        pwmEnableChannel(&PWM_G_DRIVER, PWM_B_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_G_DRIVER, 0));
+        
+        init_complete = 1;
+    }
 }
 
-void set_scramble_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm) {
-    scramble_led.r = r_pwm;
-    scramble_led.g = g_pwm;
-    scramble_led.b = b_pwm;
+void set_scramble_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm) {
+    set_scramble_LED_r_pwm(r_pwm);
+    set_scramble_LED_g_pwm(g_pwm);
+    set_scramble_LED_b_pwm(b_pwm);
 }
 
-void set_scramble_LED_r_pwm(uint8_t pwm) {
-    scramble_led.r = pwm;
+void set_scramble_LED_r_pwm(uint16_t pwm) {
+    if (pwm > 100) pwm = 100;
+    pwm *= 100;
+
+    init_pwm();
+    pwmEnableChannel(&PWM_R_DRIVER, PWM_R_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_R_DRIVER, pwm));
 }
 
-void set_scramble_LED_g_pwm(uint8_t pwm) {
-    scramble_led.g = pwm;
+void set_scramble_LED_g_pwm(uint16_t pwm) {
+    if (pwm > 100) pwm = 100;
+    pwm *= 100;
+
+    init_pwm();
+    pwmEnableChannel(&PWM_G_DRIVER, PWM_G_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_G_DRIVER, pwm));
 }
 
-void set_scramble_LED_b_pwm(uint8_t pwm) {
-    scramble_led.b = pwm;
+void set_scramble_LED_b_pwm(uint16_t pwm) {
+    if (pwm > 100) pwm = 100;
+    pwm *= 100;
+
+    init_pwm();
+    pwmEnableChannel(&PWM_B_DRIVER, PWM_B_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWM_B_DRIVER, pwm));
 }
 
 #else

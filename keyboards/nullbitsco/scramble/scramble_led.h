@@ -25,36 +25,36 @@
 #define GPIO_STATE_HIGH 1
 
 #if defined(MCU_RP)
-#define PIN_LED_R       GP18
-#define PIN_LED_G       GP19
-#define PIN_LED_B       GP20
+#include <hal.h>
+
+#define PIN_LED_R GP18
+#define PIN_LED_G GP19
+#define PIN_LED_B GP20
+
+#define PWM_R_DRIVER PWMD1
+#define PWM_G_DRIVER PWMD1
+#define PWM_B_DRIVER PWMD2
+
+#define PWM_R_CHANNEL 0
+#define PWM_G_CHANNEL 1
+#define PWM_B_CHANNEL 0
+
+#define PWM_PAL_MODE (PAL_MODE_ALTERNATE_PWM | PAL_RP_PAD_DRIVE12 | PAL_RP_GPIO_OE)
+#define PWM_PWM_COUNTER_FREQUENCY 1000000
+#define PWM_PWM_PERIOD PWM_PWM_COUNTER_FREQUENCY / 2048
+
 #else // MCU_AVR
-#define PIN_LED         B2
-#endif // defined(MCU_RP)
+#define PIN_LED B2
+#endif
 
 void set_scramble_LED(uint8_t mode);
 
-// RP2040-exclusive features
 #if defined(MCU_RP)
-typedef struct {
-    uint8_t r : 4;
-    uint8_t g : 4;
-    uint8_t b : 4;
-    uint8_t r_pwm : 4;
-    uint8_t b_pwm : 4;
-    uint8_t g_pwm : 4;
-} scramble_led_rgb_t;
-
+// RP2040 adds pwm control!
+// PWM values are in percent, 0-100
 void
-    set_scramble_LED_r(uint8_t mode),
-    set_scramble_LED_g(uint8_t mode),
-    set_scramble_LED_b(uint8_t mode),
-    set_scramble_LED_rgb(uint8_t r_mode, uint8_t g_mode, uint8_t b_mode);
-
-void
-    matrix_scan_scramble_LED(void),
-    set_scramble_LED_rgb_pwm(uint8_t r_pwm, uint8_t g_pwm, uint8_t b_pwm),
-    set_scramble_LED_r_pwm(uint8_t pwm),
-    set_scramble_LED_g_pwm(uint8_t pwm),
-    set_scramble_LED_b_pwm(uint8_t pwm);
+    set_scramble_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm),
+    set_scramble_LED_r_pwm(uint16_t pwm),
+    set_scramble_LED_g_pwm(uint16_t pwm),
+    set_scramble_LED_b_pwm(uint16_t pwm);
 #endif // MCU_RP
