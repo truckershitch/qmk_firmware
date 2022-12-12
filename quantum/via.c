@@ -156,8 +156,13 @@ void via_set_layout_options(uint32_t value) {
     }
 }
 
+__attribute__((weak)) bool process_record_via_override(uint16_t keycode, keyrecord_t *record) {return true;};
+
 // Called by QMK core to process VIA-specific keycodes.
 bool process_record_via(uint16_t keycode, keyrecord_t *record) {
+
+    if (!process_record_via_override(keycode, record)) return false;
+
     // Handle macros
     if (record->event.pressed) {
         if (keycode >= MACRO00 && keycode <= MACRO15) {
@@ -212,6 +217,7 @@ __attribute__((weak)) void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
 // possibly modified with returned values.
 void raw_hid_receive(uint8_t *data, uint8_t length) {
     uint8_t *command_id   = &(data[0]);
+    dprintf("raw_hid_receive: %02X\n", *command_id);
     uint8_t *command_data = &(data[1]);
     switch (*command_id) {
         case id_get_protocol_version: {
@@ -284,6 +290,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
             break;
         }
         case id_dynamic_keymap_set_keycode: {
+            dprintf("dynamic_keymap_set_keycode 0x%02X 0x%02X 0x%02X 0x%02X\n", command_data[0], command_data[1], command_data[2], (command_data[3] << 8) | command_data[4]);
             dynamic_keymap_set_keycode(command_data[0], command_data[1], command_data[2], (command_data[3] << 8) | command_data[4]);
             break;
         }
@@ -374,6 +381,13 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
         case id_dynamic_keymap_macro_set_buffer: {
             uint16_t offset = (command_data[0] << 8) | command_data[1];
             uint16_t size   = command_data[2]; // size <= 28
+            dprintf("dynamic_keymap_macro_set_buffer 0x%04X %u", offset, size);
+            for (uint8_t i=0; i<size; i++) {
+                uint8_t c = *(&command_data[3]+i);
+                dprintf(" 0x%02X", c);
+                if (c >= 32 && c <= 126) dprintf(" (%c)", c);
+            }
+            dprintf("\n");
             dynamic_keymap_macro_set_buffer(offset, size, &command_data[3]);
             break;
         }
@@ -419,6 +433,12 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
 
     // Return the same buffer, optionally with values changed
     // (i.e. returning state to the host, or the unhandled state).
+    dprintf("raw_hid_send %uB", length);
+    for (uint8_t i=0; i<length; i++) {
+        uint8_t c = *(data+i);
+        dprintf(" 0x%02X", c);
+    }
+    dprintf("\n");
     raw_hid_send(data, length);
 }
 

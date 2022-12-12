@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // place overrides here
 void keyboard_post_init_kb(void) {
     #ifdef CONSOLE_ENABLE
-    debug_enable = true;
+    // debug_enable = true;
     debug_matrix = true;
     #endif
     keyboard_post_init_user();
