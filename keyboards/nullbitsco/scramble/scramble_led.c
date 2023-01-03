@@ -34,9 +34,33 @@ void set_scramble_LED(uint8_t mode) {
 }
 
 // SCRAMBLE LED configuration
+// Uses PWMD1 and PWMD2
+// #define RP_PWM_USE_PWMx TRUE in mcuconf.h for each
 pwm_led_t scramble_rgb = {
     {GP18, GP19, GP20},
     {&PWMD1, &PWMD1, &PWMD2},
+    {0, 1, 0},
+    PWM_OUTPUT_ACTIVE_LOW,
+    0
+};
+
+// NIBBLE big LED configuration
+// Uses PWMD1, PWMD2, and PWMD3
+// #define RP_PWM_USE_PWMx TRUE in mcuconf.h for each
+pwm_led_t nibble_rgb = {
+    {GP6, GP5, GP3},
+    {&PWMD1, &PWMD2, &PWMD3},
+    {1, 1, 0},
+    PWM_OUTPUT_ACTIVE_HIGH,
+    0
+};
+
+// Bit-C LED configuration
+// Uses PWMD0 and PWMD1
+// #define RP_PWM_USE_PWMx TRUE in mcuconf.h for each
+pwm_led_t bit_c_rgb = {
+    {GP16, GP17, GP18},
+    {&PWMD0, &PWMD0, &PWMD1},
     {0, 1, 0},
     PWM_OUTPUT_ACTIVE_LOW,
     0
@@ -102,7 +126,46 @@ void set_scramble_LED_b_pwm(uint16_t pwm) {
     _set_led_pwm(pwm, &scramble_rgb, BLUE);
 }
 
+// NIBBLE LED setters
+void set_nibble_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm) {
+    _set_led_pwm(r_pwm, &nibble_rgb, RED);
+    _set_led_pwm(g_pwm, &nibble_rgb, GREEN);
+    _set_led_pwm(b_pwm, &nibble_rgb, BLUE);
+}
+
+void set_nibble_LED_r_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &nibble_rgb, RED);
+}
+
+void set_nibble_LED_g_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &nibble_rgb, GREEN);
+}
+
+void set_nibble_LED_b_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &nibble_rgb, BLUE);
+}
+
+// Bit-C LED setters
+void set_bit_c_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm) {
+    _set_led_pwm(r_pwm, &bit_c_rgb, RED);
+    _set_led_pwm(g_pwm, &bit_c_rgb, GREEN);
+    _set_led_pwm(b_pwm, &bit_c_rgb, BLUE);
+}
+
+void set_bit_c_LED_r_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &bit_c_rgb, RED);
+}
+
+void set_bit_c_LED_g_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &bit_c_rgb, GREEN);
+}
+
+void set_bit_c_LED_b_pwm(uint16_t pwm) {
+    _set_led_pwm(pwm, &bit_c_rgb, BLUE);
+}
+
 #else
+// TODO: implement default Bit-C and NIBBLE LED functions for AVR
 void set_scramble_LED(uint8_t mode) {
     switch(mode) {
         case LED_ON:

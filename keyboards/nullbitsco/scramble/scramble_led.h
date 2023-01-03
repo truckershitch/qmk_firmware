@@ -50,6 +50,7 @@ typedef struct pwm_led_t {
 #define PIN_LED B2
 #endif
 
+// TODO: implement default Bit-C and NIBBLE LED functions for AVR
 void set_scramble_LED(uint8_t mode);
 
 #if defined(MCU_RP)
@@ -59,5 +60,15 @@ void
     set_scramble_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm),
     set_scramble_LED_r_pwm(uint16_t pwm),
     set_scramble_LED_g_pwm(uint16_t pwm),
-    set_scramble_LED_b_pwm(uint16_t pwm);
+    set_scramble_LED_b_pwm(uint16_t pwm),
+
+    set_nibble_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm),
+    set_nibble_LED_r_pwm(uint16_t pwm),
+    set_nibble_LED_g_pwm(uint16_t pwm),
+    set_nibble_LED_b_pwm(uint16_t pwm),
+
+    set_bit_c_LED_rgb_pwm(uint16_t r_pwm, uint16_t g_pwm, uint16_t b_pwm),
+    set_bit_c_LED_r_pwm(uint16_t pwm),
+    set_bit_c_LED_g_pwm(uint16_t pwm),
+    set_bit_c_LED_b_pwm(uint16_t pwm);
 #endif // MCU_RP

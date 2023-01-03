@@ -148,10 +148,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // bool led_update_user(led_t led_state) {
 //     if (led_state.caps_lock) {
-//         // set_scramble_LED_rgb_pwm(r, g, b);
-//         set_scramble_LED(LED_DIM);
+//         set_scramble_LED(LED_ON);
 //     } else {
-//         set_scramble_LED_rgb_pwm(0, 0, 0);
+//         set_scramble_LED(LED_OFF);
 //     }
 //     return true;
 // }
