@@ -35,6 +35,9 @@
 
 /* RP2040-specific defines*/
 #define RP2040_FLASH_W25X10CL
+#define I2C_DRIVER I2CD2
 #define I2C1_SDA_PIN GP2
 #define I2C1_SCL_PIN GP3
-#define I2C_DRIVER I2CD2
+#define RMKB_SIO_DRIVER SIOD0
+#define RMKB_SIO_TX_PIN GP0
+#define RMKB_SIO_RX_PIN GP1

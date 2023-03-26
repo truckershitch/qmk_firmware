@@ -89,40 +89,6 @@ bool oled_task_user(void) {
 }
 #endif
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  // Send keystrokes to host keyboard, if connected (see readme)
-    process_record_remote_kb(keycode, record);
-    switch(keycode) {
-        case KC_CUST: //custom macro
-            if (record->event.pressed) {
-            }
-        break;
-
-        case RM_1: //remote macro 1
-        if (record->event.pressed) {
-        }
-        break;
-
-        case RM_2: //remote macro 2
-        if (record->event.pressed) {
-        }
-        break;
-
-        case RM_3: //remote macro 3
-        if (record->event.pressed) {
-        }
-        break;
-
-        case RM_4: //remote macro 4
-        if (record->event.pressed) {
-        }
-        break;
-
-    }
-    return true;
-}
-
-
 bool encoder_update_user(uint8_t index, bool clockwise) {
     if (clockwise) {
         tap_code(KC_VOLU);
@@ -130,14 +96,4 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         tap_code(KC_VOLD);
     }
     return true;
-}
-
-void matrix_init_user(void) {
-    // Initialize remote keyboard, if connected (see readme)
-    matrix_init_remote_kb();
-}
-
-void matrix_scan_user(void) {
-    // Scan and parse keystrokes from remote keyboard, if connected (see readme)
-    matrix_scan_remote_kb();
 }

@@ -76,27 +76,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 };
 
-void map_via_keycode(uint16_t * keycode) {
-  if (abs(*keycode - VIA_KEYCODE_RANGE) < NUM_CUST_KEYCODES) { //make into macro?
-    dprintf("VIA custom keycode found, mapping to QMK keycode.\n");
-    uint16_t new_keycode = (*keycode - VIA_KEYCODE_RANGE) + SAFE_RANGE;
-    dprintf("VIA KC: %u QMK KC: %u\n", *keycode, new_keycode);
-    *keycode = new_keycode;
-  }
-}
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  map_via_keycode(&keycode);
-  // Send keystrokes to host keyboard, if connected (see readme)
-  process_record_remote_kb(keycode, record);
   switch(keycode) {
-    case PROG:
-      if (record->event.pressed) {
-        rgblight_disable_noeeprom();
-        bootloader_jump();
-      }
-    break;
-
     case DISC_MUTE:
       if (record->event.pressed) {
         tap_code(KC_DISC_MUTE);
@@ -158,14 +139,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     return true;
 }
 
-void matrix_init_user(void) {
-  // Initialize remote keyboard, if connected (see readme)
-  matrix_init_remote_kb();
-}
-
 void matrix_scan_user(void) {
-  // Scan and parse keystrokes from remote keyboard, if connected (see readme)
-  matrix_scan_remote_kb();
   if (is_alt_tab_active) {
     if (timer_elapsed(alt_tab_timer) > 1000) {
       unregister_code(KC_LALT);

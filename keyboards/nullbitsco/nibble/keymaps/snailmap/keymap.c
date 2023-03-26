@@ -462,9 +462,6 @@ bool oled_task_user(void) {
 
 // Called by QMK during key processing
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Forwards keystrokes from an external input device over UART/TRRS
-    process_record_remote_kb(keycode, record);
-
     #ifdef OLED_ENABLE
     // Toggle pixels surrounding key
     render_keymap(record->event.key.row, record->event.key.col, record->event.pressed);
@@ -530,14 +527,4 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         change_RGB(clockwise);
     }
     return true;
-}
-
-// Initialize remote keyboard, if connected
-void matrix_init_user(void) {
-    matrix_init_remote_kb();
-}
-
-// Scan and parse keystrokes from remote keyboard, if connected
-void matrix_scan_user(void) {
-    matrix_scan_remote_kb();
 }

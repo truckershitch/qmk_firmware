@@ -151,3 +151,11 @@ void matrix_scan_kb(void) {
     matrix_scan_remote_kb();
     matrix_scan_user();
 }
+
+void keyboard_post_init_kb(void) {
+    #ifdef CONSOLE_ENABLE
+    debug_enable = true;
+    debug_matrix = true;
+    #endif
+    keyboard_post_init_user();
+}
