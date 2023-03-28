@@ -1,0 +1,9 @@
+{
+    "keyboard_name": "RP2040_BB",
+    "manufacturer": "nullbits",
+    "usb": {
+        "vid": "0x6E61",
+        "pid": "0x6069",
+        "device_version": "0.0.1"
+    }
+}

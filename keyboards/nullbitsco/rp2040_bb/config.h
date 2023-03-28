@@ -19,13 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config_common.h"
 
-/* USB Device descriptor parameter */
-#define VENDOR_ID       0x6E61
-#define PRODUCT_ID      0x6069
-#define DEVICE_VER      0x0001
-#define MANUFACTURER    nullbits
-#define PRODUCT         RP2040_BB
-
 /* key matrix size */
 #define MATRIX_COLS 2
 #define MATRIX_ROWS 3
@@ -37,14 +30,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MATRIX_COL_PINS { GP4, GP5 }
 #define MATRIX_ROW_PINS { GP6, GP7, GP8 }
 
+/* RP2040 definitions */
 #define RP2040_FLASH_W25X10CL
+#define RMKB_SIO_DRIVER SIOD0
+#define RMKB_SIO_TX_PIN GP0
+#define RMKB_SIO_RX_PIN GP1
 
 /* Optional SMT LED pins */
 #define RGB_DI_PIN GP19
 #define RGBLED_NUM 8
 #define RGBLIGHT_DEFAULT_VAL 64
 #define RGBLIGHT_DEFAULT_MODE 10
-#define RGBLIGHT_ANIMATIONS 
+#define RGBLIGHT_EFFECT_BREATHING
+#define RGBLIGHT_EFFECT_RAINBOW_MOOD
+#define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+#define RGBLIGHT_EFFECT_SNAKE
+#define RGBLIGHT_EFFECT_KNIGHT
+#define RGBLIGHT_EFFECT_CHRISTMAS
+#define RGBLIGHT_EFFECT_STATIC_GRADIENT
+#define RGBLIGHT_EFFECT_RGB_TEST
+#define RGBLIGHT_EFFECT_ALTERNATING
+#define RGBLIGHT_EFFECT_TWINKLE
+#define RGBLIGHT_SLEEP
 
 /* Optional encoder pins */
 #define ENCODERS_PAD_A { GP23 }
@@ -56,4 +63,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define I2C_DRIVER I2CD2
 
 /* Debug configs */
-#define DEBUG_MATRIX_SCAN_RATE
+// #define DEBUG_MATRIX_SCAN_RATE
+// #define KEYBOARD_REMOTE
