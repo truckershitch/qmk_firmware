@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* RP2040-specific defines*/
 #define RP2040_FLASH_GENERIC_03H
+#define PICO_XOSC_STARTUP_DELAY_MULTIPLIER 64
 #define I2C1_SDA_PIN GP26
 #define I2C1_SCL_PIN GP27
-#define I2C_DRIVER I2CD1
+#define I2C_DRIVER I2CD2
