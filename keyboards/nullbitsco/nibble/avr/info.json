@@ -1,0 +1,9 @@
+{
+    "processor": "atmega32u4",
+    "bootloader": "atmel-dfu",
+    "encoder": {
+        "rotary": [
+            {"pin_a": "B5", "pin_b": "B4"}
+        ]
+    }
+}

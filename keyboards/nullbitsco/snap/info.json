@@ -11,8 +11,6 @@
         "pin": "B2"
     },
     "debounce": 10,
-    "processor": "atmega32u4",
-    "bootloader": "atmel-dfu",
     "layouts": {
         "LAYOUT_all": {
             "layout": [

@@ -1,0 +1,12 @@
+{
+    "encoder": {
+        "rotary": [
+            {"pin_a": "GP23", "pin_b": "GP20"},
+            {"pin_a": "GP8", "pin_b": "GP9"},
+            {"pin_a": "GP2", "pin_b": "GP3"},
+            {"pin_a": "GP0", "pin_b": "GP1"}
+        ]
+    },
+    "processor": "RP2040",
+    "bootloader": "rp2040"
+}

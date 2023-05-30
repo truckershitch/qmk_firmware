@@ -27,27 +27,97 @@ This will require a new communication protocol, as the current one is limited.
 */
 
 #include "remote_kb.h"
-#include "uart.h"
 
 uint8_t
  msg[UART_MSG_LEN],
  msg_idx = 0;
 
-bool
- is_host = true;
+#if defined(__AVR_ATmega32U4__)
+#include "uart.h"
 
-// Private functions
+#elif defined(MCU_RP)
+#include "quantum.h"
+#include "usb_util.h"
+#include <hal.h>
 
-static bool vbus_detect(void) {
-  #if defined(__AVR_ATmega32U4__)
-    //returns true if VBUS is present, false otherwise.
+// NOTE: RP2040 uart driver is not ready, so these must be implemented w/ SIO
+typedef SIODriver QMKSerialDriver;
+typedef SIOConfig QMKSerialConfig;
+
+/* USART in 8E2 config with RX and TX FIFOs enabled. */
+static QMKSerialConfig serial_config = {
+    .baud = (SERIAL_UART_BAUD),
+    .UARTLCR_H = UART_UARTLCR_H_WLEN_8BITS | UART_UARTLCR_H_PEN | UART_UARTLCR_H_STP2 | UART_UARTLCR_H_FEN,
+    .UARTCR = 0U,
+    .UARTIFLS = UART_UARTIFLS_RXIFLSEL_1_8F | UART_UARTIFLS_TXIFLSEL_1_8E,
+    .UARTDMACR = 0U
+};
+static QMKSerialDriver* serial_driver = (QMKSerialDriver*)&RMKB_SIO_DRIVER;
+
+void uart_init(uint32_t baud) {
+  // Set GPIO pins
+  palSetLineMode(RMKB_SIO_TX_PIN, PAL_MODE_ALTERNATE_UART);
+  palSetLineMode(RMKB_SIO_RX_PIN, PAL_MODE_ALTERNATE_UART);
+
+  // Init SIO driver
+  sioStart(serial_driver, &serial_config);
+}
+
+void uart_transmit(const uint8_t* data, uint16_t length) {
+  chnWriteTimeout(serial_driver, data, (size_t)length, TIME_MS2I(20));
+}
+
+bool uart_available(void) { 
+  return !sioIsRXEmptyX(serial_driver);
+}
+
+uint8_t uart_read(void) {
+  return (uint8_t)sioGetX(serial_driver);
+}
+
+#else
+// Platform is not supported yet
+void matrix_init_remote_kb(void) {}
+void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {}
+void matrix_scan_remote_kb(void) {}
+
+#endif
+
+#if defined(KEYBOARD_HOST)
+static bool is_host(void) { return true; }
+
+#elif defined(KEYBOARD_REMOTE)
+static bool is_host(void) { return false; }
+
+#else
+static bool is_host(void) {
+  static bool init = false;
+  static bool is_host = false;
+
+  if (!init) {
+    #if defined(__AVR_ATmega32U4__)
+    // true if VBUS is present, false otherwise.
     USBCON |= (1 << OTGPADE); //enables VBUS pad
     _delay_us(10);
-    return (USBSTA & (1<<VBUS));  //checks state of VBUS
-  #else
-    #error vbus_detect is not implemented for this architecure!
-  #endif
+    is_host = (USBSTA & (1<<VBUS));  //checks state of VBUS
+
+    #else //MCU_RP
+    for (uint16_t i = 0; i < (200); i++) {
+        // This will return true if a USB connection has been established
+        if (usb_connected_state()) {
+            is_host = true;
+            break;
+        }
+        wait_ms(10);
+    }
+    #endif
+  dprintf("host: %s\n",  is_host ? "true" : "false");
+  }
+  init = true;
+  return is_host;
 }
+
+#endif
 
 static uint8_t chksum8(const unsigned char *buf, size_t len) {
   unsigned int sum;
@@ -101,7 +171,7 @@ static void process_uart(void) {
 static void get_msg(void) {
   while (uart_available()) {
     msg[msg_idx] = uart_read();
-    dprintf("idx: %u, recv: 0x%002X\n", msg_idx, msg[msg_idx]);
+    dprintf("idx: %u, recv: 0x%02X\n", msg_idx, msg[msg_idx]);
     if (msg_idx == 0 && (msg[msg_idx] != UART_PREAMBLE)) {
       dprintf("Byte sync error!\n");
       msg_idx = 0;
@@ -135,42 +205,16 @@ static void handle_remote_outgoing(uint16_t keycode, keyrecord_t *record) {
 }
 
 // Public functions
-
 void matrix_init_remote_kb(void) {
   uart_init(SERIAL_UART_BAUD);
-  is_host = vbus_detect();
 }
 
 void process_record_remote_kb(uint16_t keycode, keyrecord_t *record) {
-  #if defined (KEYBOARD_HOST)
-  handle_host_outgoing();
-
-  #elif defined(KEYBOARD_REMOTE)
-  handle_remote_outgoing(keycode, record);
-
-  #else //auto check with VBUS
-  if (is_host) {
-    handle_host_outgoing();
-  }
-  else {
-    handle_remote_outgoing(keycode, record);
-  }
-  #endif
+  if (is_host()) handle_host_outgoing();
+  else handle_remote_outgoing(keycode, record);
 }
 
 void matrix_scan_remote_kb(void) {
-  #if defined(KEYBOARD_HOST)
-  handle_host_incoming();
-
-  #elif defined (KEYBOARD_REMOTE)
-  handle_remote_incoming();
-
-  #else //auto check with VBUS
-  if (is_host) {
-    handle_host_incoming();
-  }
-  else {
-    handle_remote_incoming();
-  }
-  #endif
+  if (is_host()) handle_host_incoming();
+  else handle_remote_incoming();
 }

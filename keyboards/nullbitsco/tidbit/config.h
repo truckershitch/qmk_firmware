@@ -15,7 +15,6 @@
  */
 #pragma once
 
-
 /* Used to set remote for remote KB if VUSB detect doesn't work. */
 // #define KEYBOARD_REMOTE
 

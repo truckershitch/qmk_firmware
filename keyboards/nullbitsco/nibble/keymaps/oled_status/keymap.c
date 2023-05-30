@@ -35,7 +35,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_F16, KC_LCTL, KC_LGUI, KC_LALT,                   KC_SPC,                    MO(_FN), KC_RALT, KC_RCTL, KC_LEFT,          KC_DOWN, KC_RGHT
     ),
     [_FN] = LAYOUT_ansi(
-                 QK_BOOT, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______,  KC_END,
+                 QK_BOOT,   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______,  KC_END,
         RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, _______,
@@ -61,8 +61,6 @@ bool oled_task_user(void) {
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Send keystrokes to host keyboard, if connected (see readme)
-    process_record_remote_kb(keycode, record);
 
     switch (keycode) {
         case RGB_TOG:
@@ -70,10 +68,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 #ifdef OLED_ENABLE
                 process_record_keymap_oled(keycode);
 #endif
-            }
-            break;
-        case KC_CUST:  // custom macro
-            if (record->event.pressed) {
             }
             break;
     }
@@ -93,14 +87,4 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 #endif
     }
     return true;
-}
-
-void matrix_init_user(void) {
-    // Initialize remote keyboard, if connected (see readme)
-    matrix_init_remote_kb();
-}
-
-void matrix_scan_user(void) {
-    // Scan and parse keystrokes from remote keyboard, if connected (see readme)
-    matrix_scan_remote_kb();
 }

@@ -30,7 +30,7 @@
 #define IDX_CHECKSUM  4
 
 #define IS_HID_KC(x) ((x > 0) && (x < 0xFF))
-#define IS_RM_KC(x) ((x >= RM_BASE) && (x <= 0xFFFF))
+#define IS_RM_KC(x)  ((x >= RM_BASE) && (x <= 0xFFFF))
 
 #define RM_BASE 0xFFFF-16
 enum remote_macros {

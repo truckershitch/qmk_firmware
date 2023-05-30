@@ -54,7 +54,7 @@ void led_update_ports(led_t led_state) {
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // If console is enabled, it will print the matrix position and status of each key pressed
     #ifdef CONSOLE_ENABLE
-    dprintf("kc: 0x%04X, col: %u, row: %u, pressed: %b, time: %u\n", keycode, record->event.key.col, record->event.key.row, record->event.pressed, record->event.time);
+    dprintf("kc: 0x%04X, col: %u, row: %u, pressed: %d, time: %u\n", keycode, record->event.key.col, record->event.key.row, record->event.pressed, record->event.time);
     #endif
 
     process_record_remote_kb(keycode, record);
