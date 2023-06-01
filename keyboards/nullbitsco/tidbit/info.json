@@ -7,6 +7,7 @@
         "pid": "0x6064",
         "device_version": "0.0.1"
     },
+    "diode_direction": "ROW2COL",
     "layouts": {
         "LAYOUT": {
             "layout": [

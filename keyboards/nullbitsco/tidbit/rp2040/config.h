@@ -15,13 +15,6 @@
  */
 #pragma once
 
-/* key matrix pins */
-#define MATRIX_ROW_PINS { GP22, GP7, GP6, GP5, GP4 }
-#define MATRIX_COL_PINS { NO_PIN, NO_PIN, GP29, GP28, GP27, GP26 }
-
-/* Optional SMT LED pins */
-#define RGB_DI_PIN GP21
-
 /* RP2040-specific defines*/
 #define RP2040_FLASH_W25X10CL
 #define I2C_DRIVER I2CD1

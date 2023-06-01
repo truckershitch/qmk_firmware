@@ -3,10 +3,17 @@
         "rotary": [
             {"pin_a": "GP23", "pin_b": "GP20"},
             {"pin_a": "GP8", "pin_b": "GP9"},
-            {"pin_a": "GP2", "pin_b": "GP3"},
+            {"pin_a": "GP3", "pin_b": "GP2"},
             {"pin_a": "GP0", "pin_b": "GP1"}
         ]
     },
     "processor": "RP2040",
-    "bootloader": "rp2040"
+    "bootloader": "rp2040",
+    "ws2812": {
+        "pin": "GP21"
+    },
+    "matrix_pins": {
+        "cols": [null, null, "GP29", "GP28", "GP27", "GP26"],
+        "rows": ["GP22", "GP7", "GP6", "GP5", "GP4"]
+    }
 }

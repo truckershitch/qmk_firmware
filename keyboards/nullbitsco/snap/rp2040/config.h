@@ -19,7 +19,6 @@
 #pragma once
 
 /* split config */
-#define SOFT_SERIAL_PIN GP7
 #define SPLIT_HAND_PIN GP21
 
 /*
@@ -37,15 +36,6 @@
 #define MATRIX_COL_MUX_PINS_RIGHT { GP6, GP5, GP4 }
 #define MATRIX_EXT_PIN_RIGHT GP21
 
-/* Optional SMT LED pins */
-#define RGB_DI_PIN GP23
-
-/* Optional encoder pins */
-#define ENCODERS_PAD_A { GP20 }
-#define ENCODERS_PAD_B { GP22 }
-#define ENCODERS_PAD_A_RIGHT { GP8 }
-#define ENCODERS_PAD_B_RIGHT { GP9 }
-
 /* Optional speaker pin */
 #define AUDIO_PIN GP21
 
@@ -57,7 +47,6 @@
 #define RMKB_SIO_DRIVER SIOD0
 #define RMKB_SIO_TX_PIN GP0
 #define RMKB_SIO_RX_PIN GP1
-
 
 // Needed for ARM platforms, as there is no PROGMEM
 #ifndef pgm_read_byte_near

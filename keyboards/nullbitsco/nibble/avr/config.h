@@ -30,6 +30,3 @@
 #define MATRIX_ROW_PINS { B1, B3, B2, B6, D4 }
 #define MATRIX_COL_MUX_PINS { F4, F5, F6, F7 }
 #define MATRIX_COL_PINS { }
-
-/* Optional SMT LED pins */
-#define RGB_DI_PIN E6

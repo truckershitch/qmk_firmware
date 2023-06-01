@@ -16,7 +16,7 @@
 
 /* NOTE: This config file is specific to AVR builds. */
 
-#define SOFT_SERIAL_PIN E6
+/* split config */
 #define SPLIT_HAND_PIN B6
 
 // NOTE: There is a bug in AVR deep sleep, which
@@ -40,15 +40,6 @@
 #define MATRIX_ROW_PINS_RIGHT { F4, F5, F6, F7, B1, B3 }
 #define MATRIX_COL_MUX_PINS_RIGHT { D7, C6, D4 }
 #define MATRIX_EXT_PIN_RIGHT B6
-
-/* Optional SMT LED pins */
-#define RGB_DI_PIN B2
-
-/* Optional encoder pins */
-#define ENCODERS_PAD_A { B3 }
-#define ENCODERS_PAD_B { B1 }
-#define ENCODERS_PAD_A_RIGHT { B4 }
-#define ENCODERS_PAD_B_RIGHT { B5 }
 
 /* Optional speaker pin */
 #define AUDIO_PIN B6

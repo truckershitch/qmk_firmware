@@ -15,7 +15,6 @@
  */
 #pragma once
 
-
 /* Used to set host for remote KB if VUSB detect doesn't work. */
 // #define KEYBOARD_HOST // Force host mode
 // #define KEYBOARD_REMOTE // Force remote mode

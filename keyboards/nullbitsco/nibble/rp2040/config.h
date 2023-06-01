@@ -25,9 +25,6 @@
 #define MATRIX_COL_MUX_PINS { GP29, GP28, GP27, GP26 }
 #define MATRIX_COL_PINS { }
 
-/* Optional SMT LED pins */
-#define RGB_DI_PIN GP7
-
 /* RP2040-specific defines*/
 #define RP2040_FLASH_W25X10CL
 #define I2C1_SDA_PIN GP2

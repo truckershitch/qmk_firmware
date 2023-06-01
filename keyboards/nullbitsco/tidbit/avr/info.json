@@ -8,5 +8,12 @@
         ]
     },
     "processor": "atmega32u4",
-    "bootloader": "atmel-dfu"
+    "bootloader": "atmel-dfu",
+    "ws2812": {
+        "pin": "B6"
+    },
+    "matrix_pins": {
+        "cols": [null, null, "F4", "F5", "F6", "F7"],
+        "rows": ["B1", "E6", "D7", "C6", "D4"]
+    }
 }
