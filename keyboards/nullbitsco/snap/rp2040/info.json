@@ -2,7 +2,7 @@
     "processor": "RP2040",
     "bootloader": "rp2040",
     "ws2812": {
-        "pin": "GP23"
+        "pin": "GP19"
     },
     "split": {
         "soft_serial_pin": "GP7",
@@ -16,7 +16,7 @@
     },
     "encoder": {
         "rotary": [
-            {"pin_a": "GP20", "pin_b": "GP22"}
+            {"pin_a": "GP18", "pin_b": "GP20"}
         ]
     }
 }

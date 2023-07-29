@@ -19,6 +19,8 @@ CUSTOM_MATRIX = lite       # Split custom matrix
 DEFAULT_FOLDER = nullbitsco/snap/avr
 
 # Project specific files
-SRC +=  common/nb_leds.c \
+# SRC +=  common/nb_leds.c \
         common/remote_kb.c \
         matrix.c
+SRC += common/remote_kb.c \
+	   matrix.c

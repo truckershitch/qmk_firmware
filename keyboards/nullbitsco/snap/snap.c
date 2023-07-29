@@ -21,7 +21,7 @@ uint16_t alt_tab_timer = 0;
 bool muted = false;
 
 void matrix_init_kb(void) {
-    set_bitc_LED(LED_OFF);
+    // set_bitc_LED(LED_OFF);
     matrix_init_remote_kb();
     matrix_init_user();
 }
@@ -46,10 +46,10 @@ void matrix_scan_kb(void) {
     }
 }
 
-// Use Bit-C LED to show CAPS LOCK and NUM LOCK status
-void led_update_ports(led_t led_state) {
-    set_bitc_LED(led_state.caps_lock ? LED_DIM : LED_OFF);
-}
+// // Use Bit-C LED to show CAPS LOCK and NUM LOCK status
+// void led_update_ports(led_t led_state) {
+//     set_bitc_LED(led_state.caps_lock ? LED_DIM : LED_OFF);
+// }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // If console is enabled, it will print the matrix position and status of each key pressed
@@ -63,7 +63,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case QK_BOOT:
             if (record->event.pressed) {
-                set_bitc_LED(LED_DIM);
+                // set_bitc_LED(LED_DIM);
                 #ifdef RGBLIGHT_ENABLE
                 rgblight_disable_noeeprom();
                 #endif

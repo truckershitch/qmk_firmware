@@ -128,7 +128,7 @@ pwm_led_t bit_c_rgb = {
     0
 };
 
-// Internal PWM init 
+// Internal PWM init
 // only runs once per PWM LED
 void _init_pwm(pwm_led_t* led) {
     if (!led->init_complete) {
@@ -146,11 +146,11 @@ void _init_pwm(pwm_led_t* led) {
             pwmCFG.channels[1].mode = PWM_OUTPUT_ACTIVE_LOW;
             pwmStart(led->driver[i], &pwmCFG);
 
-            // Start LEDs in the OFF state 
+            // Start LEDs in the OFF state
             uint8_t pwm = led->mode == PWM_OUTPUT_ACTIVE_HIGH ? 100 : 0;
             pwmEnableChannel(led->driver[i], led->channel[i], PWM_FRACTION_TO_WIDTH(led->driver[i], 99, pwm));
         }
-        
+
         led->init_complete = 1;
     }
 }

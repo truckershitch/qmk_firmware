@@ -13,13 +13,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
-#include "quantum.h"
-#include "common/remote_kb.h"
-// #include "common/nb_leds.h"
-
-enum custom_keycodes {
-    DISC_MUTE = QK_KB_0,
-    SUPER_ALT_TAB
-};
+#define OLED_BRIGHTNESS 128
+#define OLED_TIMEOUT 30000
+#define OLED_UPDATE_INTERVAL 250
